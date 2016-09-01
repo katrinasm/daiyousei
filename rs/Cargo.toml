@@ -1,0 +1,10 @@
+[package]
+name = "daiyousei"
+version = "0.2.0"
+authors = ["Katrina", "imamelia", "p4plus2"]
+
+[dependencies]
+nom  = "1.2.2"
+rand = "0.3"
+[dependencies.asar]
+path = "src/rsasar"

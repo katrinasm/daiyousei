@@ -1,0 +1,7 @@
+[package]
+name = "asar"
+version = "0.1.0"
+authors = ["Alcaro", "Katrina"]
+
+[dependencies]
+libc = "0.2.0"
