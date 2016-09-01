@@ -2,7 +2,8 @@
 ; It is also attached to all included sprites before insertion.
 ; Neither it nor anything it includes has any actual asm in it;
 ; it is used for basically a giant set of defines and macros.
-incsrc "../options.asm"
+
+incsrc "options.asm"
 
 ; There’s already a bunch of code & coders out there that think that
 ; the SA-1 and Vitor Vilela’s SA-1 pack are the exact same thing.
@@ -40,8 +41,6 @@ else
 endif
 
 incsrc "prelude/macros.asm"
-
-;function f(x) = x+1
 
 !opt_manySprites ?= 1
 
