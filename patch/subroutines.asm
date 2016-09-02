@@ -129,53 +129,6 @@ START:
 	sep #$10
 	rtl
 
-%dys_ssr(ClsDrawInfo)
-	stz $0e
-	stz $0f
-	; check if we're on-screen horizontally
-	lda !cls_posXL,x : cmp $1a
-	lda !cls_posXH,x : sbc $1b            
-	beq .onScreenX     
-	inc $0f
-.onScreenX 
-	lda !cls_posXH,x : xba : lda !cls_posXL,x
-	rep #$20
-	sec : sbc $1a
-	; set carry if sprite pos outside (-$40..$140)
-	clc : adc #$0040 : cmp #$0180
-	sep #$20
-	; a = carry
-	rol : and #$01
-	sta $0d
-	; if a != 0 (i.e. if we're offscreen), return
-	bne .invalid
-	
-	lda !cls_posYL,x : clc : adc #$0c
-	php
-	cmp $1c : rol $00
-	plp
-	
-	lda !cls_posYH,x : adc #$00
-	lsr $00 : sbc $1d
-	beq +
-	inc $0e
-+
-	lda.l ClsOam,x
-	tay
-	
-	lda !cls_posXL,x   
-	sec : sbc $1a
-	sta $00
-	lda !cls_posYL,x
-	sec : sbc $1c
-	sta $01
-	clv
-	rtl
- 
-.invalid
-	sep #$40
-	rtl
-	
 ClsOam:
 	db $e0,$e4,$e8,$ec,$f0,$f4,$f8,$fc
 	db $5c,$58,$54,$50,$4c,$48,$44,$40	
