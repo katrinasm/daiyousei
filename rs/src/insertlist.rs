@@ -4,7 +4,9 @@ use std::collections::HashMap;
 use std::path::{Path,PathBuf};
 use genus::*;
 
-pub fn parse_list(list: &str) -> Result<HashMap<Genus, Vec<(u32, PathBuf)>>, String> {
+pub type InsertList = HashMap<Genus, Vec<(u32, PathBuf)>>;
+
+pub fn parse_list(list: &str) -> Result<InsertList, String> {
 	if let IResult::Done(rest, vsn) = dys_prefix(list) {
 		if vsn != 1 {
 			Err(String::from("You have a sprite list from the future"))
