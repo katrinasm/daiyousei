@@ -57,8 +57,22 @@ fn main() {
 	let rom_path = base_dir.join(&args.romname);
 	let list_path = base_dir.join(&args.listname);
 	
-	let mut rom = require_ok!(RomBuf::from_file(&rom_path));
-	let mut insert_list = require_ok!(File::open(&list_path));
+	let mut rom = match RomBuf::from_file(&rom_path) {
+		Ok(rom) => rom,
+		Err(e) => {
+			println!("Couldn't open ROM ({}): {}", rom_path.display(), e);
+			return;
+		},
+	};
+	
+	let mut insert_list = match File::open(&list_path) {
+		Ok(il) => il,
+		Err(e) => {
+			println!("Couldn't open insert list ({}): {}", list_path.display(), e);
+			return;
+		},
+	};
+	
 	let mut list_buf = String::new();
 	require_ok!(insert_list.read_to_string(&mut list_buf));
 	let list_buf = list_buf;
