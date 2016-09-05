@@ -97,21 +97,7 @@ fn main() {
 	
 	let groups = require_ok!(insertlist::parse_list(&list_buf));
 	
-	let mut cfgs = Vec::<SpriteCfg>::new();
-	for (gen, sprites) in groups.iter() {
-		for &(id, ref cfg_path) in sprites {
-			let mut full_path = base_dir.clone();
-			full_path.push(gen.dir());
-			full_path.push(cfg_path);
-			let mut cfg_buf = String::new();
-			
-			File::open(&full_path).unwrap().read_to_string(&mut cfg_buf).unwrap();
-			match SpriteCfg::parse(&full_path, *gen, id as u16, &cfg_buf) {
-				Ok(cfg) => cfgs.push(cfg),
-				Err(e)  => println!("{}: {:?}", full_path.to_string_lossy(), e),
-			}
-		};
-	};
+	let cfgs = require_ok!(get_cfgs(groups, &base_dir));
 	
 	match insert_sprites(&mut rom, &cfgs, &patch_dir, &dys_data, verbose) {
 		Err((errs, warns)) => {
@@ -156,6 +142,28 @@ fn parse_args(argv: env::Args) -> Result<CmdArgs, String> {
 	} else {
 		Ok(val)
 	}
+}
+
+fn get_cfgs(insert_list: insertlist::InsertList, base_dir: &PathBuf)
+-> Result<Vec<SpriteCfg>, String> {
+	let mut cfgs = Vec::<SpriteCfg>::new();
+	
+	for (gen, sprites) in insert_list.iter() {
+		for &(id, ref cfg_path) in sprites {
+			let mut full_path = base_dir.clone();
+			full_path.push(gen.dir());
+			full_path.push(cfg_path);
+			let mut cfg_buf = String::new();
+			
+			File::open(&full_path).unwrap().read_to_string(&mut cfg_buf).unwrap();
+			match SpriteCfg::parse(&full_path, *gen, id as u16, &cfg_buf) {
+				Ok(cfg) => cfgs.push(cfg),
+				Err(e)  => return Err(format!("{}: {:?}", full_path.to_string_lossy(), e)),
+			}
+		};
+	};
+	
+	Ok(cfgs)
 }
 
 fn patch_subroutines(rom: &mut RomBuf, patch_dir: &Path) -> asar::AResult<()> {
