@@ -155,10 +155,19 @@ fn get_cfgs(insert_list: insertlist::InsertList, base_dir: &PathBuf)
 			full_path.push(cfg_path);
 			let mut cfg_buf = String::new();
 			
-			File::open(&full_path).unwrap().read_to_string(&mut cfg_buf).unwrap();
+			let mut f = match File::open(&full_path) {
+				Ok(f) => f,
+				Err(e) => return Err(format!("Error reading {}: {}", full_path.display(), e)),
+			};
+			
+			match f.read_to_string(&mut cfg_buf) {
+				Ok(_) => (),
+				Err(e) => return Err(format!("Error reading {}: {}", full_path.display(), e)),
+			};
+			
 			match SpriteCfg::parse(&full_path, *gen, id as u16, &cfg_buf) {
 				Ok(cfg) => cfgs.push(cfg),
-				Err(e)  => return Err(format!("{}: {:?}", full_path.to_string_lossy(), e)),
+				Err(e)  => return Err(format!("{}: {:?}", full_path.display(), e)),
 			}
 		};
 	};
