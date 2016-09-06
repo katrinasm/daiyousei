@@ -14,6 +14,8 @@ mod parse_aux;
 mod spritecfg;
 mod insertlist;
 mod dys_tables;
+mod desclist;
+
 use asar::rom::RomBuf;
 use spritecfg::{SpriteCfg, InsertPoint};
 use dys_tables::DysTables;
@@ -41,7 +43,7 @@ fn main() {
 	let args = require_ok!(parse_args(env::args()));
 	
 	let verbose = args.flags.contains(&'v');
-	//let gen_ssc = args.flags.contains(&'d');
+	let gen_ssc = args.flags.contains(&'d');
 	//let gen_spritelist = args.flags.contains(&'l');
 	
 	for flag in args.flags {
@@ -126,6 +128,15 @@ fn main() {
 	print!("Writing rom ... ");
 	rom.into_file(&rom_path);
 	println!("written!");
+	
+	print!("Creating spritelist ... ");
+	if gen_ssc {
+		let mut ssc_path = rom_path.clone();
+		ssc_path = if ssc_path.set_extension("ssc") { ssc_path } else { PathBuf::from("dys.ssc") };
+		let mut ssc_file = OpenOptions::new().write(true).create(true).open(ssc_path).unwrap();
+		desclist::write_desclist(&mut ssc_file, &cfgs);
+	}
+	println!("done!");
 }
 
 fn parse_args(argv: env::Args) -> Result<CmdArgs, String> {
