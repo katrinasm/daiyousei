@@ -182,12 +182,20 @@ impl SpriteCfg {
 		};
 	}
 	
-	pub fn name(self, ebit: bool) -> String {
-		if !ebit { self.name } else { self.name_set.unwrap_or(self.name) }
+	pub fn name(&self, ebit: bool) -> &String {
+		if ebit && self.name_set.is_some() {
+			self.name_set.as_ref().unwrap()
+		} else {
+			&self.name
+		}
 	}
 	
-	pub fn desc(self, ebit: bool) -> String {
-		if !ebit { self.desc } else { self.desc_set.unwrap_or(self.desc) }
+	pub fn desc(&self, ebit: bool) -> &String {
+		if ebit && self.desc_set.is_some() {
+			self.desc_set.as_ref().unwrap()
+		} else {
+			&self.desc
+		}
 	}
 	
 	pub fn dys_option_bytes<'a>(&'a self) -> &'a [u8] { &self.dys_option_bytes }
