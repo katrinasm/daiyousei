@@ -44,7 +44,7 @@ fn main() {
 	
 	let verbose = args.flags.contains(&'v');
 	let gen_ssc = args.flags.contains(&'d');
-	//let gen_spritelist = args.flags.contains(&'l');
+	let gen_spritelist = args.flags.contains(&'l');
 	
 	for flag in args.flags {
 		println!("ran with -{}", flag);
@@ -129,14 +129,23 @@ fn main() {
 	rom.into_file(&rom_path);
 	println!("written!");
 	
-	print!("Creating spritelist ... ");
 	if gen_ssc {
+		print!("Creating sprite descriptions ... ");
 		let mut ssc_path = rom_path.clone();
 		ssc_path = if ssc_path.set_extension("ssc") { ssc_path } else { PathBuf::from("dys.ssc") };
 		let mut ssc_file = OpenOptions::new().write(true).create(true).open(ssc_path).unwrap();
 		desclist::write_desclist(&mut ssc_file, &cfgs);
-	}
-	println!("done!");
+		println!("done!");
+	};
+	
+	if gen_spritelist {
+		print!("Creating sprite list ... ");
+		let mut mw2_path = rom_path.clone();
+		ssc_path = if ssc_path.set_extension("mw2") { ssc_path } else { PathBuf::from("dys.mw2") };
+		let mut mw2_file = OpenOptions::new().write(true).create(true).open(ssc_path).unwrap();
+		desclist::write_collection(&mut mw2_file, &cfgs);
+		println!("done!");
+	};
 }
 
 fn parse_args(argv: env::Args) -> Result<CmdArgs, String> {
