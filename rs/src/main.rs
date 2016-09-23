@@ -141,8 +141,8 @@ fn main() {
 	if gen_spritelist {
 		print!("Creating sprite list ... ");
 		let mut mw2_path = rom_path.clone();
-		ssc_path = if ssc_path.set_extension("mw2") { ssc_path } else { PathBuf::from("dys.mw2") };
-		let mut mw2_file = OpenOptions::new().write(true).create(true).open(ssc_path).unwrap();
+		mw2_path = if mw2_path.set_extension("mw2") { mw2_path } else { PathBuf::from("dys.mw2") };
+		let mut mw2_file = OpenOptions::new().write(true).create(true).open(mw2_path).unwrap();
 		desclist::write_collection(&mut mw2_file, &cfgs);
 		println!("done!");
 	};
