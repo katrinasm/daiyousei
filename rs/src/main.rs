@@ -44,7 +44,7 @@ fn main() {
 	
 	let verbose = args.flags.contains(&'v');
 	let gen_ssc = args.flags.contains(&'d');
-	let gen_spritelist = args.flags.contains(&'c');
+	let gen_collection = args.flags.contains(&'c');
 	
 	for flag in args.flags {
 		println!("ran with -{}", flag);
@@ -138,7 +138,7 @@ fn main() {
 		println!("done!");
 	};
 	
-	if gen_spritelist {
+	if gen_collection {
 		print!("Creating sprite list ... ");
 		let mut mw2_path = rom_path.with_extension("mw2");
 		let mut mw2_file = OpenOptions::new().write(true).create(true).open(mw2_path).unwrap();
