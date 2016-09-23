@@ -44,7 +44,7 @@ fn main() {
 	
 	let verbose = args.flags.contains(&'v');
 	let gen_ssc = args.flags.contains(&'d');
-	let gen_spritelist = args.flags.contains(&'l');
+	let gen_spritelist = args.flags.contains(&'c');
 	
 	for flag in args.flags {
 		println!("ran with -{}", flag);
