@@ -131,7 +131,7 @@ fn main() {
 	
 	if gen_ssc {
 		print!("Creating sprite descriptions ... ");
-		let mut ssc_path = rom_path.with_extension("ssc");
+		let ssc_path = rom_path.with_extension("ssc");
 		let mut ssc_file = OpenOptions::new().write(true).create(true).open(ssc_path).unwrap();
 		desclist::write_desclist(&mut ssc_file, &cfgs);
 		println!("done!");
