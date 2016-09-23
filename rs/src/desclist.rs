@@ -5,7 +5,7 @@ use std::io::prelude::*;
 use spritecfg;
 
 pub fn write_desclist(f: &mut File, cfgs: &Vec<spritecfg::SpriteCfg>) {
-	for cfg in cfgs {
+	for cfg in cfgs.iter().filter(|cfg| cfg.placeable()) {
 		if cfg.id >= 0x200 {
 			continue;
 		};
