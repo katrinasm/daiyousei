@@ -26,7 +26,7 @@ pub clipping: [u8; 4],
 	dys_option_bytes: [u8; 2],
 	acts_like: u8,
 	extra_bytes: u8,
-	
+
 	name: String,
 	desc: String,
 	name_set: Option<String>,
@@ -52,7 +52,7 @@ impl SpriteCfg {
 			parse_oldstyle(path, gen, id, buf)
 		}
 	}
-	
+
 	pub fn new() -> SpriteCfg {
 		SpriteCfg {
 			genus:            Genus::Std,
@@ -70,31 +70,31 @@ impl SpriteCfg {
 			source_path:      PathBuf::from(""),
 		}
 	}
-	
+
 	pub fn needs_init(&self) -> bool {
 		match self.genus {
 			Genus::Std => true,
 			_          => false,
 		}
 	}
-	
+
 	pub fn placeable(&self) -> bool { self.genus.placeable() }
-	
+
 	pub fn assemble(&self, rom: &mut RomBuf, prelude: &str, source: &Path, temp: &Path)
 	-> asar::AResult<InsertPoint> {
 		let (mut main, mut init) = (0usize, 0usize);
 		let warns;
-		
+
 		let mut tempasm = OpenOptions::new()
 			.write(true)
 			.truncate(true)
 			.create(true)
 			.open(temp)
 			.unwrap();
-		
+
 		tempasm.write_all(prelude.as_bytes()).unwrap();
 		let mut source_buf = Vec::<u8>::with_capacity(8 * 1024); // A wild guess.
-		
+
 		let mut srcf = match File::open(source) {
 			Ok(f) => f,
 			Err(e) => return Err((
@@ -104,23 +104,23 @@ impl SpriteCfg {
 				vec![]
 			)),
 		};
-		
+
 		srcf.read_to_end(&mut source_buf).unwrap();
 		tempasm.write_all(&source_buf).unwrap();
-		
+
 		drop(tempasm);
-		
+
 		warns = match asar::patch(temp, rom) {
 			Ok((_, ws))     => ws,
 			Err(ews)        => return Err(ews),
 		};
-		
+
 		for print in asar::prints() {
 			let mut chunks = print.split_whitespace();
 			let fst = chunks.next();
 			let snd = chunks.next();
 			match fst {
-				Some("MAIN") => match snd { 
+				Some("MAIN") => match snd {
 					Some(ofs) => main = usize::from_str_radix(ofs, 16).unwrap(),
 					_         => return Err((vec![],vec![])),
 				},
@@ -132,14 +132,14 @@ impl SpriteCfg {
 				_            => return Err((vec![],vec![])),
 			}
 		};
-		
+
 		if main == 0 || (init == 0 && self.needs_init()) {
 			return Err((vec![],vec![]));
 		}
-		
+
 		Ok((InsertPoint { main: main, init: init }, warns))
 	}
-	
+
 	pub fn apply_cfg(&self, rom: &mut RomBuf, tables: &DysTables) {
 		match self.genus {
 			Genus::Std
@@ -155,7 +155,7 @@ impl SpriteCfg {
 					let size = self.extra_bytes + 3;
 					rom.set_byte(tables.sprite_sizes + size_ofs, size).unwrap();
 					rom.set_byte(tables.sprite_sizes + size_ofs + 0x100, size).unwrap();
-					
+
 					let optbase = tables.option_bytes + (self.id as usize * 0x10);
 					rom.set_byte(optbase, self.genus.to_byte()).unwrap();
 					rom.set_byte(optbase + 1, self.acts_like).unwrap();
@@ -169,7 +169,7 @@ impl SpriteCfg {
 			_            => unimplemented!(),
 		};
 	}
-	
+
 	pub fn apply_offsets(&self, rom: &mut RomBuf, tables: &DysTables, ip: InsertPoint) {
 		let ofs = self.id as usize * 3;
 		match self.genus {
@@ -181,7 +181,7 @@ impl SpriteCfg {
 			_ => unimplemented!(),
 		};
 	}
-	
+
 	pub fn name(&self, ebit: bool) -> &String {
 		if ebit && self.name_set.is_some() {
 			self.name_set.as_ref().unwrap()
@@ -189,7 +189,7 @@ impl SpriteCfg {
 			&self.name
 		}
 	}
-	
+
 	pub fn desc(&self, ebit: bool) -> &String {
 		if ebit && self.desc_set.is_some() {
 			self.desc_set.as_ref().unwrap()
@@ -197,10 +197,32 @@ impl SpriteCfg {
 			&self.desc
 		}
 	}
-	
+
+	pub fn uses_ebit(&self) -> bool { self.name_set.is_some() }
+
+	pub fn place_mw2(&self, target: &mut Vec<u8>, ebit: bool) {
+		if !self.placeable() { panic!("Attempted to place unplaceable sprite") };
+		let b0 = 0x89;
+		let b1 = 0x80;
+		let num_extra_bit: u8   = if self.id & 0x100 == 0 { 0 } else { 8 };
+		let ebit_val: u8        =                if !ebit { 0 } else { 4 };
+		
+		let b0 = b0 | num_extra_bit | ebit_val;
+		
+		target.push(b0);
+		target.push(b1);
+		
+		if self.id >= 0x200 {
+			target.push(0xf8 + self.extra_bytes);
+		}
+		target.push((self.id & 0xff) as u8);
+		
+		for _ in 0 .. self.extra_bytes { target.push(0); };
+	}
+
 	pub fn dys_option_bytes<'a>(&'a self) -> &'a [u8] { &self.dys_option_bytes }
 	pub fn source_path<'a>(&'a self) -> &'a PathBuf { &self.source_path }
-	
+
 }
 
 fn parse_newstyle(path: &Path, gen: Genus, id: u16, buf: &str) -> Result<SpriteCfg, CfgErr> {
@@ -226,7 +248,7 @@ fn parse_newstyle(path: &Path, gen: Genus, id: u16, buf: &str) -> Result<SpriteC
 			_ => return Err(CfgErr { explain: format!("bad field name: \"{}\"", name) }),
 		};
 	};
-	
+
 	if cfg.source_path.file_name() == None {
 		Err(CfgErr { explain: String::from("Sprite needs a source file") })
 	} else {
@@ -244,7 +266,7 @@ fn parse_oldstyle(path: &Path, gen: Genus, id: u16, buf: &str) -> Result<SpriteC
 			return Err(CfgErr{ explain: String::from("Old-style CFG too short") });
 		}
 	};
-	
+
 	if let Some(s) = it.next() {
 		Ok(SpriteCfg {
 			genus:       gen,
@@ -264,7 +286,7 @@ fn read_byte(s: &str) -> Result<u8, CfgErr> {
 	let mut iter = s.trim().chars();
 	let mut n = 0u32;
 	let mut read = false;
-	
+
 	while let Some(ch) = iter.next() {
 		if let Some(v) = ch.to_digit(0x10) {
 			n *= 0x10;
@@ -274,7 +296,7 @@ fn read_byte(s: &str) -> Result<u8, CfgErr> {
 			return Err(CfgErr { explain: String::from("Non-byte data in byte field") })
 		}
 	}
-	
+
 	if !read { Err(CfgErr { explain: String::from("Expected a byte, found nothing") }) } else { Ok(n as u8) }
 }
 
@@ -283,7 +305,7 @@ fn read_bytes(s: &str, buf: &mut [u8]) -> Result<(), CfgErr> {
 	for b in s.split_whitespace() {
 		bytes.push(try!(read_byte(b)));
 	};
-	
+
 	if bytes.len() != buf.len() {
 		Err(CfgErr { explain: format!("Wrong length byte sequence: expected {} bytes, got {}",
 		                              buf.len(), bytes.len()) })
