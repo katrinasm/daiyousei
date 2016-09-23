@@ -131,8 +131,7 @@ fn main() {
 	
 	if gen_ssc {
 		print!("Creating sprite descriptions ... ");
-		let mut ssc_path = rom_path.clone();
-		ssc_path = if ssc_path.set_extension("ssc") { ssc_path } else { PathBuf::from("dys.ssc") };
+		let mut ssc_path = rom_path.with_extension("ssc");
 		let mut ssc_file = OpenOptions::new().write(true).create(true).open(ssc_path).unwrap();
 		desclist::write_desclist(&mut ssc_file, &cfgs);
 		println!("done!");
@@ -140,18 +139,15 @@ fn main() {
 	
 	if gen_collection {
 		print!("Creating sprite list ... ");
-		let mut mw2_path = rom_path.with_extension("mw2");
+		let mw2_path = rom_path.with_extension("mw2");
 		let mut mw2_file = OpenOptions::new().write(true).create(true).open(mw2_path).unwrap();
 		
-		let mut mwt_path = rom_path.with_extension("mwt");
+		let mwt_path = rom_path.with_extension("mwt");
 		let mut mwt_file = OpenOptions::new().write(true).create(true).open(mwt_path).unwrap();
 		 
 		desclist::write_collection(&mut mwt_file, &mut mw2_file, &cfgs);
 		println!("done!");
 	};
-}
-
-pub fn rom_associated_filepath() {
 }
 
 fn parse_args(argv: env::Args) -> Result<CmdArgs, String> {
