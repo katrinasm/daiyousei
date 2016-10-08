@@ -166,56 +166,52 @@ them will take less space than inserting a copy of each routine with sprites.
                  Sprites using this setting should set the size
                  bits on their own.
 
+- !ssr_GenericGfx_##x##
+	Draws a fixed-size sprite using the cfg file palette setting.
+	The available variants are 16x16, 16x32, 32x16, and 32x32.
 
+	The subroutine automatically flips the sprite horizontally,
+	but not vertically.
 
-|----------------------|------------------------------------------------
-| !ssr_GenericGfx_##x##| Draws a fixed-size sprite using the cfg file palette setting.
-|                      | The available variants are 16x16, 16x32, 32x16, and 32x32.
-|                      |
-|                      | The subroutine automatically flips the sprite horizontally,
-|                      | but not vertically.
-|                      |
-|                      | Takes a pointer to the tile table in 16-bit A.
-|                      | Takes a frame number in Y.
-|                      | The format of the tile table is simply 1, 2, 2, or 4-byte rows,
-|                      | depending on the sprite size, which are the tile number for
-|                      | 16x16 tiles to draw.
-|----------------------|------------------------------------------------
-| !ssr_GenericGfx_FTable16x16
-|                      | Draws a sprite of arbitrary size made of 16x16 tiles.
-|                      |
-|                      | The subroutine automatically flips the sprite horizontally,
-|                      | but not vertically.
-|                      |
-|                      | Takes a pointer to the frame table in 16-bit A.
-|                      | Takes a frame number in Y.
-|                      | The frame table is a table of 16-bit pointers to frames.
-|                      | Each frame consists of the following:
-|                      | - one byte: the width of the image in pixels
-|                      | - a series of four-byte tile descriptors, each as follows:
-|                      |   - tile number (cannot be $ff)
-|                      |   - tile properties (yxppccct)
-|                      |   - offset X (-128 .. 127)
-|                      |   - offset Y (-128 .. 127)
-|                      | - the byte $ff to mark the end of the frame.
-|----------------------|------------------------------------------------
-| !ssr_GenericGfx_FTableMTS
-|                      | Draws a sprite of arbitrary size, using Multiple Tile Sizes.
-|                      |
-|                      | The subroutine automatically flips the sprite horizontally,
-|                      | but not vertically.
-|                      |
-|                      | Takes a pointer to the frame table in 16-bit A.
-|                      | Takes a frame number in Y.
-|                      | The frame table is a table of 16-bit pointers to frames.
-|                      | Each frame consists of the following:
-|                      | - one byte: the width of the image in pixels
-|                      | - a series of five-byte tile descriptors, each as follows:
-|                      |   - tile size ($00 for 8x8, $02 for 16x16)
-|                      |   - tile number (may be $ff)
-|                      |   - tile properties (yxppccct)
-|                      |   - offset X (-128 .. 127)
-|                      |   - offset Y (-128 .. 127)
-|                      | - the byte $ff to mark the end of the frame.
-|----------------------|------------------------------------------------
+	Takes a pointer to the tile table in 16-bit A.
+	Takes a frame number in Y.
+	The format of the tile table is simply 1, 2, 2, or 4-byte rows,
+	depending on the sprite size, which are the tile number for
+	16x16 tiles to draw.
 
+- !ssr_GenericGfx_FTable16x16
+	Draws a sprite of arbitrary size made of 16x16 tiles.
+
+	The subroutine automatically flips the sprite horizontally,
+	but not vertically.
+
+	Takes a pointer to the frame table in 16-bit A.
+	Takes a frame number in Y.
+	The frame table is a table of 16-bit pointers to frames.
+	Each frame consists of the following:
+	- one byte: the width of the image in pixels
+	- a series of four-byte tile descriptors, each as follows:
+	  - tile number (cannot be $ff)
+	  - tile properties (yxppccct)
+	  - offset X (-128 .. 127)
+	  - offset Y (-128 .. 127)
+	- the byte $ff to mark the end of the frame.
+
+- !ssr_GenericGfx_FTableMTS
+	Draws a sprite of arbitrary size, using Multiple Tile Sizes.
+
+	The subroutine automatically flips the sprite horizontally,
+	but not vertically.
+
+	Takes a pointer to the frame table in 16-bit A.
+	Takes a frame number in Y.
+	The frame table is a table of 16-bit pointers to frames.
+	Each frame consists of the following:
+	- one byte: the width of the image in pixels
+	- a series of five-byte tile descriptors, each as follows:
+	  - tile size ($00 for 8x8, $02 for 16x16)
+	  - tile number (may be $ff)
+	  - tile properties (yxppccct)
+	  - offset X (-128 .. 127)
+	  - offset Y (-128 .. 127)
+	- the byte $ff to mark the end of the frame.
