@@ -360,8 +360,8 @@ pointSounds:
 	ora $64
 	sta !oam1_props,y : sta !oam1_props+4,y
 	lda $00 : sta !oam1_ofsX,y : sta !oam1_ofsX+4,y
-	lda $01 : sta !oam1_ofsY,y
-	clc : adc #$10 : sta !oam1_ofsY+4,y
+	lda $01 : sta !oam1_ofsY+4,y
+	sec : sbc #$10 : sta !oam1_ofsY,y
 	lda $02 : sta !oam1_tile,y
 	lda $03 : sta !oam1_tile+4,y
 	ldy #$02
@@ -397,9 +397,9 @@ pointSounds:
 	clc : adc #$10
 	sta !oam1_ofsX+4,y : sta !oam1_ofsX+12,y
 
-	lda $01 : sta !oam1_ofsY,y : sta !oam1_ofsY+4,y
-	clc : adc #$10
-	sta !oam1_ofsY+8,y : sta !oam1_ofsY+12,y
+	lda $01 : sta !oam1_ofsY+8,y : sta !oam1_ofsY+12,y
+	sec : sbc #$10
+	sta !oam1_ofsY,y : sta !oam1_ofsY+4,y
 
 	lda $02 : sta !oam1_tile,y
 	lda $03 : sta !oam1_tile+4,y
