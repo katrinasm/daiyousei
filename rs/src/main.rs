@@ -85,7 +85,7 @@ fn main() {
 
 	let patch_dir = base_dir.join("patch");
 
-	if let Err((es,ws)) = patch_subroutines(&mut rom, &patch_dir) {
+	if let Err((es,ws)) = patch_subroutines(&mut rom, &patch_dir, &base_dir) {
 		for e in es { println!("SUB: {}", e); };
 		for w in ws { println!("SUB: {}", w); };
 		return;
@@ -211,9 +211,9 @@ fn get_cfgs(insert_list: insertlist::InsertList, base_dir: &PathBuf)
 	Ok(cfgs)
 }
 
-fn patch_subroutines(rom: &mut RomBuf, patch_dir: &Path) -> asar::AResult<()> {
+fn patch_subroutines(rom: &mut RomBuf, patch_dir: &Path, base_dir: &Path) -> asar::AResult<()> {
 	let patch_path = patch_dir.join("subroutines.asm");
-	let usr_dir_path = patch_dir.join("subroutines");
+	let usr_dir_path = base_dir.join("library");
 	let ptrf_path = patch_dir.join("prelude").join("subroutine_ptrs.asm");
 	let usrf_path = patch_dir.join("temp_subroutines.asm");
 
