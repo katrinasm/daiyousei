@@ -53,7 +53,7 @@ START:
 	jsl $07f722!F
 	jsl $07f7a4!F
 	plb : rtl
-	
+
 %dys_ssr(InitViaAct)
 	phb : phk : plb
 	jsl $07f722!F
@@ -65,10 +65,10 @@ START:
 	stz !spr_offscreenH,x
 	; check if we're on-screen horizontally
 	lda !spr_posXL,x : cmp $1a
-	lda !spr_posXH,x : sbc $1b            
-	beq .onScreenX     
+	lda !spr_posXH,x : sbc $1b
+	beq .onScreenX
 	inc !spr_offscreenH,x
-.onScreenX 
+.onScreenX
 	lda !spr_posXH,x : xba : lda !spr_posXL,x
 	rep #$20
 	sec : sbc $1a
@@ -80,14 +80,14 @@ START:
 	sta !spr_offscreen,x
 	; if a != 0 (i.e. if we're offscreen), return
 	bne .invalid
-	
+
 	lda !spr_props2,x : and #$20 : bne .noTopCheck
 .topCheck
 	lda !spr_posYL,x : clc : adc #$1c
 	php
 	cmp $1c : rol $00
 	plp
-	
+
 	lda !spr_posYH,x : adc #$00 : lsr $00 : sbc $1d
 	beq +
 	lda #$02 : sta !spr_offscreenV,x
@@ -97,22 +97,22 @@ START:
 	php
 	cmp $1c : rol $00
 	plp
-	
+
 	lda !spr_posYH,x : adc #$00
 	lsr $00 : sbc $1d
 	beq +
 	inc !spr_offscreenV,x
 +
 	ldy !spr_oamIndex,x
-	
-	lda !spr_posXL,x   
+
+	lda !spr_posXL,x
 	sec : sbc $1a
 	sta $00
 	lda !spr_posYL,x
 	sec : sbc $1c
 	sta $01
 	rtl
- 
+
 .invalid
 ;	plb
 ; This is the same stunt as the original GetDrawInfo,
@@ -131,9 +131,9 @@ START:
 
 ClsOam:
 	db $e0,$e4,$e8,$ec,$f0,$f4,$f8,$fc
-	db $5c,$58,$54,$50,$4c,$48,$44,$40	
-	db $3c,$38,$34,$30	
-	
+	db $5c,$58,$54,$50,$4c,$48,$44,$40
+	db $3c,$38,$34,$30
+
 macro __GET__DRAW__INLINE()
 	stz !spr_offscreenV,x
 	stz !spr_offscreenH,x
@@ -150,9 +150,9 @@ macro __GET__DRAW__INLINE()
 	sta !spr_offscreen,x
 	beq +
 	rtl
-+	
++
 endmacro
-	
+
 %dys_ssr(Offscreen_X1)
 	lda #$02 : bra Offscreen
 %dys_ssr(Offscreen_X2)
@@ -182,13 +182,13 @@ Offscreen:
 	cmp #$0200
 	sep #$20
 	bpl .erase
-	
+
 	; don't erase us if "process offscreen" set
 	; note that things can still go offscreen vertically.
 	; This matches the original. I'm not sure why the original was
 	; like that.
 	lda !spr_props4,x : and #$04 : bne .end
-	
+
 	; Check left/right screen status every other frame
 	; If we're on the right frame, we're offscreen if $1a + bound + xpos < 0
 	; If we're on the left frame, we're offscreen if  $1a + bound - xpos < 0
@@ -207,7 +207,7 @@ Offscreen:
 	sec : sbc $00
 	sep #$20
 	bpl .end
-	
+
 .erase
 	lda !spr_status,x
 	stz !spr_status,x
@@ -235,11 +235,11 @@ Offscreen:
 ;      below  above
 	dw $0140, $fec0
 
-%dys_ssr(IsOffscreen) 
+%dys_ssr(IsOffscreen)
 	lda !spr_offscreenH,x : ora !spr_offscreenV,x
 	rtl
 
-%dys_ssr(HorizPos) 
+%dys_ssr(HorizPos)
 	ldy #$00
 	lda $94 : sec : sbc !spr_posXL,x : sta $0f
 	lda $95 : sbc !spr_posXH,x : bpl +
@@ -267,7 +267,7 @@ Offscreen:
 	jsl $02ace5!F
 	ply
 	rtl
-	
+
 %dys_ssr(StarPoints)
 	phy
 	lda.w !WB|$18d2 : inc.w !WB|$18d2
@@ -282,7 +282,7 @@ Offscreen:
 	jsl $02ace5!F
 	ply
 	rtl
-	
+
 pointSounds:
 	db $00,$13,$14,$15,$16,$17,$18,$19
 
@@ -310,13 +310,13 @@ pointSounds:
 	sta !oam1_props,y
 	lda $00 : sta !oam1_ofsX,y
 	lda $01 : sta !oam1_ofsY,y
-	
+
 	ldy #$02
 	lda #$00
 	jsl FinishOamWrite
 	lda !dys_lastOam : sta !spr_oamIndex,x
 	rts
-	
+
 %dys_ssr(GenericGfx_32x16)
 	sta $00
 	tya
@@ -344,7 +344,7 @@ pointSounds:
 	jsl FinishOamWrite
 	lda !dys_lastOam : sta !spr_oamIndex,x
 	rts
-	
+
 %dys_ssr(GenericGfx_16x32)
 	sta $00
 	tya
@@ -369,8 +369,8 @@ pointSounds:
 	jsl FinishOamWrite
 	lda !dys_lastOam : sta !spr_oamIndex,x
 	rts
-	
-	
+
+
 %dys_ssr(GenericGfx_32x32)
 	sta $00
 	tya
@@ -392,15 +392,15 @@ pointSounds:
 	ora $64
 	sta !oam1_props,y : sta !oam1_props+4,y
 	sta !oam1_props+8,y : sta !oam1_props+12,y
-	
+
 	lda $00 : sta !oam1_ofsX,y : sta !oam1_ofsX+8,y
 	clc : adc #$10
 	sta !oam1_ofsX+4,y : sta !oam1_ofsX+12,y
-	
+
 	lda $01 : sta !oam1_ofsY,y : sta !oam1_ofsY+4,y
 	clc : adc #$10
 	sta !oam1_ofsY+8,y : sta !oam1_ofsY+12,y
-	
+
 	lda $02 : sta !oam1_tile,y
 	lda $03 : sta !oam1_tile+4,y
 	lda $04 : sta !oam1_tile+8,y
@@ -417,27 +417,27 @@ pointSounds:
 	lda ($00),y
 	sta $02
 	sep #$20
-	
+
 	jsr + : rtl
 +	jsl GetDrawInfo
 
 	phx
-	
+
 	; $00 = sprite pos y - screen pos y
 	lda !spr_posYH,x : xba : lda !spr_posYL,x
 	rep #$20
 	sec : sbc $1c : sta $00
 	sep #$20
-	
+
 	; $08 = sprite pos x - screen pos x
 	lda !spr_posXH,x : xba : lda !spr_posXL,x
 	rep #$20
 	sec : sbc $1a : sta $08
 	sep #$20
-	
+
 	; $04 = tile props
 	lda !spr_facing,x : lsr : ror : lsr : eor #$40 : ora $64 : sta $04
-	
+
 	; $05-06 = direction as (0, -1)
 	; $08 offset if facing right
 	stz $0c
@@ -453,7 +453,7 @@ pointSounds:
 	; $0e = oam1_sizes + oam slot / 4
 	lda.b #!oam1_sizes>>8 : sta $0f
 	tya : lsr #2 : adc.b #!oam1_sizes : sta $0e
-	
+
 	ldy $02
 .loop
 ; $00-01 - ofs y
@@ -464,16 +464,16 @@ pointSounds:
 ; $0e-0f - oam sizes ptr
 	lda $0001,y : cmp #$ff : beq .end
 	sta.b !oam1_tile,x
-	
+
 	stz $03
 	lda $0004,y : bpl + : dec $03 : + : sta $02
 	rep #$21
 	lda $00 : adc $02 : clc : adc #$0010 : cmp #$0100 : bcs .skipTile
 	sep #$21
 	sbc #$10 : sta.b !oam1_ofsY,x
-	
+
 	lda $0002,y : eor $04 : sta.b !oam1_props,x
-	
+
 	lda #$02 : sta ($0e)
 	stz $03
 	lda $0c : lsr
@@ -491,13 +491,13 @@ pointSounds:
 	inx #4
 	inc $0e
 	bra .loop
-	
+
 .skipTile
 	; carry is set here.
 	tya : adc #$0003 : tay
 	sep #$20
 	bra .loop
-	
+
 .end
 	sep #$30
 	lda $0e : sec : sbc.b #!oam1_sizes : asl #2 : sta !dys_lastOam
@@ -526,7 +526,7 @@ pointSounds:
 	sec : sbc #$08 : sta $00
 	sec : sbc #$08 : sta $02
 	dec $0c
-	
+
 +	rep #$30
 	tya : and #$00fc : lsr #2 : adc.w #!oam1_sizes : sta $08
 	sep #$20
@@ -567,7 +567,7 @@ pointSounds:
 	jsl FinishOamWrite
 	lda !dys_lastOam : sta !spr_oamIndex,x
 	rts
-	
+
 %dys_ssr(SpawnSprite)
 	jsl $02a9e4!F
 	bmi .ret

@@ -206,17 +206,17 @@ impl SpriteCfg {
 		let b1 = 0x80;
 		let num_extra_bit: u8   = if self.id & 0x100 == 0 { 0 } else { 8 };
 		let ebit_val: u8        =                if !ebit { 0 } else { 4 };
-		
+
 		let b0 = b0 | num_extra_bit | ebit_val;
-		
+
 		target.push(b0);
 		target.push(b1);
-		
+
 		if self.id >= 0x200 {
 			target.push(0xf8 + self.extra_bytes);
 		}
 		target.push((self.id & 0xff) as u8);
-		
+
 		for _ in 0 .. self.extra_bytes { target.push(0); };
 	}
 

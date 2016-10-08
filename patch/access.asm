@@ -1,6 +1,6 @@
 @include
 ; Vitor’s SA-1 patch already goofs on the vast majority of memory accesses
-; in the game, let alone the sprite memory accesses. 
+; in the game, let alone the sprite memory accesses.
 if !opt_vitorSA1 == 0
 	pushpc
 		org $07f722
@@ -68,12 +68,12 @@ if !opt_vitorSA1 == 0
 			sta !dys_sprLoadStatuses,y
 		org $03b8bc
 			sta !dys_sprLoadStatuses,y
-			
+
 	org $02a9de
 	FindFreeSlotLowPri:
 		ldy.b #!dys_maxActive-3
 		bra FindFreeSprSlot_loop
-		
+
 	org $02a9e4
 	FindFreeSprSlot:
 		ldy.b #!dys_maxActive-1
@@ -85,6 +85,6 @@ if !opt_vitorSA1 == 0
 	.found
 		tya
 		rtl
-		
+
 	pullpc
 endif

@@ -17,7 +17,7 @@ FinishOamWriteUpdate:
 	sta !dys_lastOam
 	ldy !spr_oamIndex,x
 	jml $01b7c2!F
-	
+
 SetOam:
 	lda !spr_status,x : beq .ret
 	lda !dys_lastOam
@@ -36,7 +36,7 @@ SetOam:
 	bcs .exhausted
 	tay
 	bra .ffLoop
-	
+
 .exhausted
 	ldy.b #!dys_firstOam
 .found
@@ -46,8 +46,8 @@ SetOam:
 	sta !dys_lastLastOam
 .ret
 	jml $0180e5!F
-	
-	
+
+
 
 SpriteMainPrep:
 	stz !WB|$18df
@@ -57,8 +57,8 @@ SpriteMainPrep:
 	dec : sta !dys_lastLastOam
 	ldx.b #!dys_maxActive-1
 	jml $0180a9!F
-	
-	
+
+
 
 ;-----------------------------------------------------------------------------;
 ; Misc. fixes                                                                 ;
@@ -90,7 +90,7 @@ pushpc
 		nop
 	org $01e945
 		jml LakituCloudOamFix
-		
+
 	org $01dfa9
 		jml BonusGameOamFix
 pullpc
@@ -115,19 +115,18 @@ LakituCloudOamFix:
 	pla
 	clc : adc #$10
 	sta !dys_lastOam
-	
+
 	jml $01e95e!F
-	
+
 BonusGameOamFix:
 	tya
 	lsr
 	lsr
 	tay
-	
+
 	lda !dys_lastOam
 	; carry clear after lsrs
 	adc #$14
 	sta !dys_lastOam
-	
+
 	jml $01dfad!F
-	

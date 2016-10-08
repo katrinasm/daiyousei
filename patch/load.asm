@@ -14,11 +14,11 @@ LoadBytesViaAct:
 	lda.b #DYS_DATA_OPTION_BYTES>>16 : pha : plb
 	rep #$10
 	phy
-	
+
 	lda #$00 : %OBX(sta, !spr_extraBit) : xba
 	%OBX(lda, !spr_act) : %OBX(sta, !spr_custNum)
 	bra LoadBytes_skipInit
-	
+
 LoadBytes:
 	phb
 	; We save the flags because we need to go 16-bit in Y.
@@ -30,7 +30,7 @@ LoadBytes:
 	; This is also reasonably convenient for the load routine,
 	; one of the main callers of this routine.
 	phy
-	
+
 	%OBX(lda, !spr_extraBit) : lsr #3 : and #$03 : xba
 	%OBX(lda, !spr_custNum)
 .skipInit
@@ -56,13 +56,13 @@ LoadBytes:
 	lda.w DYS_DATA_OPTION_BYTES+13,y : %OBX(sta, !spr_xClipH)
 	lda.w DYS_DATA_OPTION_BYTES+14,y : %OBX(sta, !spr_xProps1)
 	lda.w DYS_DATA_OPTION_BYTES+15,y : %OBX(sta, !spr_xProps2)
-	
+
 	lda #$00
 	%OBX(sta, !spr_xByte1)
 	%OBX(sta, !spr_xByte2)
 	%OBX(sta, !spr_xByte3)
 	%OBX(sta, !spr_xByte4)
-	
+
 	ply
 	plp
 	plb : rtl
@@ -96,7 +96,7 @@ pullpc
 ; (This means that the table can only be traversed forward, never back).
 ; After that the pattern repeats for every sprite in the level.
 ; See asm.txt §EXTRA BITS for more information on the 'ce' bits.
-; 
+;
 ; The way this subroutine works is: we decide on a column (horizontal level)
 ; or a row (vertical) where sprites will be updated, the "update line".
 ; There is no way to just jump to one screen because we don't know how many
@@ -109,21 +109,21 @@ pullpc
 ; So a sprite on screen $00 will always appear before a sprite on screen $01
 ; but there's no rule that a sprite on line 0 of screen $00 will appear before
 ; a sprite on line 1 of screen $00.
-; 
+;
 ; So, back to walking the table, we get to a sprite on the same screen as the
 ; update line. Once we have that, we check every sprite for an exact match,
 ; until we hit a sprite on a later screen, which means there can't be any more
 ; exact matches. We have loaded all the possible sprites for now, and return.
 ; If we do find an exact match, we check its entry in the !dys_sprLoadStatuses
 ; table, and if it's set, we don't load it.
-; 
+;
 ; The main thing that can go wrong during this is that `!dys_maxActive` sprites
 ; are on screen, which means we can't load any more without deleting one of the
-; already on-screen sprites. If SMW finds out this is the case, it just 
+; already on-screen sprites. If SMW finds out this is the case, it just
 ; drops the new sprite, unless that sprite is number $7b, the goal tape,
 ; in which case one is deleted so the level is always beatable.
 ; Daiyousei currently just drops it without checking anything.
-; 
+;
 ; During this routines, direct page variables are used as follows:
 ; $00-$01 load line
 ; $02     sprite size in bytes (3 for 0 extra bytes)
@@ -166,7 +166,7 @@ LoadSprites:
 .scrLoop
 	; If we hit bit $ff (here checked kind of funny), we hit the end. return.
 	lda $0000,y : xba : cmp #$ff00 : bcs lsret
-	; When we hit a sprite with a >= screen number than the load line, 
+	; When we hit a sprite with a >= screen number than the load line,
 	; we are to a point where we can start looking for sprites to load.
 	and #$020f : cmp $0e : bcs .sprLoopInit
 	; If we haven't got there yet, we need to dig up the sprite's number
@@ -181,7 +181,7 @@ LoadSprites:
 	rep #$21
 	tya : adc $02 : tay
 	bra .scrLoop
-	
+
 .sprLoopInit
 	ldx $0c
 	; If the screen number was past the load line, it means there aren't
@@ -203,21 +203,21 @@ LoadSprites:
 	%OBX(lda, !dys_sprLoadStatuses) : bne .nextSprite
 	; If it is, o miracle of miracles, we actually load it!
 	lsr $05
-	
+
 	if !opt_manySprites
 	lda $04 : cmp #$f8 : bcc +
 	lda #$02 : tsb $05
 	lda $0003,y : sta $04
 +
 	endif
-	
+
 	rep #$20
 	lda $04 : asl #4 : tax
 	sep #$20
 	lda DYS_DATA_OPTION_BYTES,x
-	
+
 	ldx $0c
-	
+
 	cmp #$02 : bcc .setSprite
 	beq .setGenerator
 	cmp #$04
@@ -226,7 +226,7 @@ LoadSprites:
 	cmp #$05
 	beq .setScroll
 	stp
-	
+
 .nextSprite
 	rep #$21
 	tya : adc $02 : tay
@@ -235,7 +235,7 @@ LoadSprites:
 
 .lsret2
 	plp : plb : rtl
-	
+
 .setGenerator
 	jsr SetGenerator
 	bra .nextSprite
@@ -249,7 +249,7 @@ LoadSprites:
 	lda !WB|$143e : ora !WB|$143f : bne +
 	jsr SetScroll
 +	bra .nextSprite
-	
+
 .setSprite
 	;stx $0c
 	ldx.w #!dys_maxActive-1
@@ -259,7 +259,7 @@ LoadSprites:
 	dex : bpl .findSlot
 	ldx $0c
 	bra .nextSprite
-	
+
 .foundSlot
 ; First off, drop everything and initialize the easy tables.
 ; But before we do that we have to set the extra bit and sprite number.
@@ -272,14 +272,14 @@ else
 endif
 
 	jsl !ssr_InitTables
-	
+
 if !opt_manySprites
 	lda $05 : bit #$02 : beq +
 	iny
 	dec $02
 	+
 endif
-	
+
 	lda $02 : sec : sbc #$03 : sta $0a
 	beq +
 	lda $0003,y : %OBX(sta, !spr_xByte1)
@@ -289,7 +289,7 @@ endif
 	lda $0005,y : %OBX(sta, !spr_xByte3)
 	dec $0a : beq +
 	lda $0006,y : %OBX(sta, !spr_xByte4)
-+	
++
 
 if !opt_manySprites
 	lda $05 : bit #$02 : beq +
@@ -299,17 +299,17 @@ if !opt_manySprites
 endif
 
 	jsr LoadPosition
-	
+
 	lda $06 : %OBX(sta, !spr_posXL)
 	lda $07 : %OBX(sta, !spr_posYL)
 	lda $08 : %OBX(sta, !spr_posXH)
 	lda $09 : %OBX(sta, !spr_posYH)
-	
+
 	lda $0c
 	%OBX(sta, !spr_loadStatIndex)
 	lda #$01
 	%OBX(sta, !spr_status)
-	
+
 	ldx $0c
 	%OBX(sta, !dys_sprLoadStatuses)
 	jmp .nextSprite
@@ -344,7 +344,7 @@ endif
 	lda $08 : %OB(sta, !gen_xByte3)
 	lda $09 : %OB(sta, !gen_xByte4)
 	rts
-	
+
 SetShooter:
 	stx $0c
 	ldx #$0007
@@ -362,22 +362,22 @@ SetShooter:
 	lda #$00
 	%OBX(sta, !dys_sprLoadStatuses)
 	%OB(lda, !dys_curSht) : tax
-	
+
 .foundSlot
 	lda $0c : %OBX(sta, !sht_loadIndex)
-	
+
 	jsr LoadPosition
 	lda $06 : %OBX(sta, !sht_posXL)
 	lda $07 : %OBX(sta, !sht_posYL)
 	lda $08 : %OBX(sta, !sht_posXH)
 	lda $09 : %OBX(sta, !sht_posYH)
-	
+
 	jsr LoadExtraBytes
 	lda $06 : %OBX(sta, !sht_xByte1)
 	lda $07 : %OBX(sta, !sht_xByte2)
 	lda $08 : %OBX(sta, !sht_xByte3)
 	lda $09 : %OBX(sta, !sht_xByte4)
-	
+
 if !opt_manySprites
 	jsr GetExtraBits
 	%OBX(sta, !sht_extraBits)
@@ -386,16 +386,16 @@ else
 endif
 
 	lda $04 : %OBX(sta, !sht_id)
-	
+
 	lda #$00
 	%OBX(sta, !sht_miscA) : %OBX(sta, !sht_miscB)
-	
+
 	lda #$10 : %OBX(sta, !sht_time)
-	
+
 	ldx $0c
 	lda #$01 : %OBX(sta, !dys_sprLoadStatuses)
 	rts
-	
+
 SetScroll:
 	lda #$01 : %OBX(sta, !dys_sprLoadStatuses)
 	lda $04 : sec : sbc #$e7 : sta !WB|$143e
@@ -411,51 +411,51 @@ SetScroll:
 	plx : stx $0e
 	ply : plx
 	rts
-	
+
 RunOnce:
 	phx : phy : phb
 	pei ($00) : pei ($02) : pei ($0e)
 	php
 	lda $04 : sta $00
 	lsr $05
-	
+
 	rep #$20
 	lda $04 : asl : adc $04 : tax
 	lda DYS_DATA_MAIN_PTRS,x : sta $0d
 	sep #$20
 	lda DYS_DATA_MAIN_PTRS+2,x : sta $0f
-	
+
 	jsr LoadPosition
 	ldx $06 : phx
 	ldx $08 : stx $04
 	jsr LoadExtraBytes
 	plx : stx $02
-	
+
 	lda $0000,y : and #$0c : sta $01
-	
+
 	sep #$30
 	ldx $0c
 	lda $0f : pha : plb
 	phk : pea .retp-1
 	jml [!DP|$0d]
 .retp
-	
+
 	plp : plx : stx $00
 	plx : stx $02
 	plx : stx $0e
 	plb : plx : ply
 	rts
-	
+
 LoadExtraBytes:
 	rep #$20
 	stz $06
 	stz $08
 	sep #$20
-	
+
 if !opt_manySprites
 	lda $05 : bit #$02 : bne .longform
 endif
-	
+
 	lda $02
 	sec : sbc #$03
 	beq .ret
@@ -469,14 +469,14 @@ endif
 	lda $0006,y : sta $09
 .ret
 	rts
-	
+
 if !opt_manySprites
 .longform
 	lda $02
 	sec : sbc #$04
 	beq .ret
 	sta $0a
-	
+
 	lda $0004,y : sta $06
 	dec $0a : beq .ret
 	lda $0005,y : sta $07
@@ -485,7 +485,7 @@ if !opt_manySprites
 	dec $0a : beq .ret
 	lda $0007,y : sta $09
 	rts
-	
+
 GetExtraBits:
 	lda $0000,y : and #$0c : sta $0a
 	lda $05 : bit #$02 : beq +
@@ -493,7 +493,7 @@ GetExtraBits:
 +	ora $0a
 	rts
 endif
-	
+
 LoadPosition:
 ; Set up X/Y position nonsense.
 	lda $0001,y : and #$f0 : sta $06
@@ -501,7 +501,7 @@ LoadPosition:
 	lda $0000,y : and #$02 : asl #3 : tsb $08
 	lda $0000,y : and #$f0 : sta $07
 	lda $0000,y : and #$01 : sta $09
-	
+
 	lda $5b : lsr : bcc +
 ; Flip x/y if in vertical level
 	rep #$20
@@ -509,7 +509,7 @@ LoadPosition:
 	lda $08 : xba : sta $08
 	sep #$20
 +	rts
-	
+
 loadOfs:
 dw	-$30, 0, $120
 

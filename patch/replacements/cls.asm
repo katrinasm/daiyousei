@@ -1,4 +1,3 @@
 Bonus1Up:
-	
+
 	rtl
-	

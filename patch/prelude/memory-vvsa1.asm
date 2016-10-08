@@ -5,9 +5,9 @@
 	!dys_maxActive       = 20
 	!dys_maxLevel        = 255
 	!dys_maxCls          = 20
-	
+
 	!dys_firstOam        = $30
-	
+
 ;=============================================================================;
 ; Sprite table locations.                                                     ;
 ;-----------------------------------------------------------------------------;
@@ -26,11 +26,11 @@
 	!spr_posXF           = $74de
 	!spr_posYF           = $74c8
 	!spr_status          = $3242
-	
+
 	!spr_offscreen       = $7536
 	!spr_offscreenH      = $3376
 	!spr_offscreenV      = $7642
-	
+
 	!spr_facing          = $3334
 	!spr_blocked         = $334a
 	!spr_onSlope         = $7520
@@ -43,14 +43,14 @@
 	!spr_inWater         = $75ba
 	!spr_disableCapeTime = $7fd6
 	!spr_disableContact  = $32dc
-	
+
 	!spr_props1          = $75d0
 	!spr_props2          = $75ea
 	!spr_props3          = $7600
 	!spr_props4          = $7616
 	!spr_props5          = $762c
 	!spr_props6          = $7658
-	
+
 	!spr_miscA           = $3216
 	!spr_miscB           = $74f4
 	!spr_miscC           = $750a
@@ -66,13 +66,13 @@
 
 	; This one is unused by SMW, but initialized to zero on sprite load.
 	!spr_miscZ           = $766e
-	
+
 	!spr_timeA           = $32c6
 	!spr_timeB           = $32f2
 	!spr_timeC           = $3308
 	!spr_timeD           = $338c
 	!spr_timeE           = $33fa
-	
+
 	; The following defines refer to ram not used in the original SMW.
 	; These ones are established traditions from the old spritetools.
 	!spr_extraBit        = $418b10
@@ -88,12 +88,12 @@
 	!spr_xByte2          = $418b4c
 	!spr_xByte3          = $418b58
 	!spr_xByte4          = $418b64
-	
+
 	!spr_xClipL          = $418baa
 	!spr_xClipT          = $418bb6
 	!spr_xClipW          = $418bc2
 	!spr_xClipH          = $418bce
-	
+
 	; These ones are new in Daiyousei.
 	!spr_xOpts1          = $418c40
 	!spr_xOpts2          = $418c4c
@@ -132,7 +132,7 @@
 	!sht_miscA           = $418c20
 	!sht_miscB           = $418c28
 	!sht_extraBits       = $418c30
-	
+
 ;=============================================================================;
 ; Cluster sprite data locations.                                              ;
 ;=============================================================================;
@@ -151,7 +151,7 @@
 	!cls_miscC           = $6f72
 	!cls_miscD           = $6f86
 	!cls_miscE           = $6f9a
-	
+
 ;=============================================================================;
 ; Extended sprite data locations.                                             ;
 ;=============================================================================;
@@ -167,7 +167,7 @@
 	!xsp_miscA           = $7765
 	!xsp_miscB           = $776f
 	!xsp_behindScenery   = $7779
-	
+
 ;=============================================================================;
 ; Other tables useful to sprites.                                             ;
 ;=============================================================================;
@@ -175,21 +175,21 @@
 	!oam1_ofsY           = $6301
 	!oam1_tile           = $6302
 	!oam1_props          = $6303
-	
+
 	!oam0_ofsX           = $6200
 	!oam0_ofsY           = $6201
 	!oam0_tile           = $6202
 	!oam0_props          = $6203
-	
+
 	!oam1_bitSizes       = $6410
 	!oam0_bitSizes       = $6400
 	!oam1_sizes          = $6460
 	!oam0_sizes          = $6420
-	
+
 	!dys_slot            = $75e9
 	; These ones are mostly used internally.
 	!dys_sprLoadStatuses = $418a00
 	!dys_lastOam         = $418c38
 	!dys_lastLastOam     = $418c39
-	
+
 	!dys_oam0Index       = $418c3a

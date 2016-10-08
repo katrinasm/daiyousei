@@ -19,7 +19,7 @@ impl Genus {
 			Genus::Scl => "scl",
 		}
 	}
-	
+
 	pub fn dir(self) -> &'static str {
 		match self {
 			Genus::Std => "sprites",
@@ -30,7 +30,7 @@ impl Genus {
 			Genus::Scl => "scrollers",
 		}
 	}
-	
+
 	pub fn to_byte(self) -> u8 {
 		match self {
 			Genus::Std => 1,
@@ -41,7 +41,7 @@ impl Genus {
 			Genus::Scl => 6,
 		}
 	}
-	
+
 	pub fn from_str(name: &str) -> Result<Genus, String> {
 		match name {
 			"standard"  => Ok(Genus::Std),
@@ -53,7 +53,7 @@ impl Genus {
 			_           => Err(String::from("Bad sprite type")),
 		}
 	}
-	
+
 	pub fn placeable(self) -> bool {
 		match self {
 			Genus::Std | Genus::Gen | Genus::Sht | Genus::R1s | Genus::Scl => true,

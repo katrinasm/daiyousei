@@ -5,7 +5,7 @@
 RunOnceShell:
 	lda $00 : sec : sbc #$d6 : sta $00
 
-.nospecial	
+.nospecial
 	jsl !ssr_SpawnSprite : bmi .ret
 	lda #$01 : sta !dys_sprLoadStatuses,x
 	txa
@@ -18,12 +18,12 @@ RunOnceShell:
 	lda $05 : sta !spr_posYH,x
 .ret
 	rtl
-	
+
 RunOnceGrnShell:
 	lda #$04
 	sta $00
 	bra RunOnceShell_nospecial
-	
+
 RunOnceTriplePlatform:
 	jsl !ssr_FindFreeSlot
 	bmi .ret
@@ -52,7 +52,7 @@ RunOnceTriplePlatform:
 db $00,$aa,$54
 .anglesH
 db $00,$00,$01
-	
+
 RunOnceFiveEeries:
 	jsl !ssr_FindFreeSlot
 	bmi .ret
@@ -78,7 +78,7 @@ RunOnceFiveEeries:
 	bpl .loop
 .ret
 	rtl
-	
+
 .ofsXL
 	db -$20, -$10, $00,  $10, $20
 .ofsXH
@@ -102,7 +102,7 @@ RunOnceCandleFlames:
 	tya : asl #2 : sta !cls_miscA,y
 	dey : bpl .loop
 	rtl
-	
+
 .ofsX
 	db $50, $90, $d0, $10
 
@@ -123,7 +123,7 @@ RunOnceBooCeiling:
 	dex : bpl .loop
 	inc !WB|$18ba
 	rtl
-	
+
 RunOnceBooRingCW:
 	ldy #$01 : bra +
 RunOnceBooRingCCW:
@@ -150,7 +150,7 @@ RunOnceBooRingCCW:
 	lda $05 : sta $0fb8,y
 	lda #$00 : sta $0fba,y
 	lda $0d : sta $0fbc,y
-+	
++
 	dec $0e : bmi .end
 .while
 	dex : bpl .loop
@@ -174,7 +174,7 @@ RunOnceSwooperCeiling:
 	lda $05 : sta !cls_posYH,x
 	dex : bpl .loop
 	rtl
-	
+
 RunOnceBooCloud:
 	lda #$01 : sta !dys_sprLoadStatuses,x
 	sta !dys_cls_active

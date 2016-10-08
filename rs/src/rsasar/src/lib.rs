@@ -22,7 +22,7 @@ const EXPECTED_API_VER: i32 = 200;
 #[derive(Debug)]
 
 /// Provides a storage structure for Asar’s errors.
-/// 
+///
 /// Asar’s API provides very poor guarantees about the lifetimes of its errors.
 /// This module copies them, also hiding the quite messy fields of Asar’s error type.
 /// In the future, some of these fields may be made public or given accessors,
@@ -68,7 +68,7 @@ pub struct Label {
 }
 
 /// Represents a define from Asar, which maps a name to a string.
-/// 
+///
 /// Asar defines are like C preprocessor defines (without arguments) if the C
 /// preprocessor worked on bytes instead of tokens. A define name is
 /// essentially `[a-zA-Z0-9_]+` - note that it is allowed to have a define
@@ -78,7 +78,7 @@ pub struct Label {
 /// These bytes are usually but not always valid to place elsewhere in a source
 /// file - they are not parsed until after the define is expanded,
 /// so they may contain purely erroneous sequences.
-/// 
+///
 /// In assembly source files, defines are prefixed with b'!', but this is not
 /// part of the name.
 #[derive(Debug)]
@@ -151,14 +151,14 @@ fn asar_array_convert<T, U, F>(
 		where F: Fn(&T) -> U
 		{
 	let (ptr, len) = unsafe { asar_array_info(getarray) };
-	
+
 	let mut v = Vec::with_capacity(len);
-	
+
 	for i in 0 .. len {
 		let r = unsafe { &*ptr.offset(i as isize) };
 		v.push(convert(r));
 	};
-	
+
 	v
 }
 
@@ -172,46 +172,46 @@ fn asar_map_convert<T: Sized, K, V, FK, FV>(
 		      FV: Fn(&T) -> V,
 		{
 	let (ptr, len) = unsafe { asar_array_info(getarray) };
-	
+
 	let mut hm = HashMap::with_capacity(len);
-	
+
 	for i in 0 .. len {
 		let r = unsafe { &*ptr.offset(i as isize) };
 		hm.insert(kconvert(r), vconvert(r));
 	};
-	
+
 	hm
 }
 
 /// Provides Asar’s version in its characteristic format.
-/// 
+///
 /// Asar’s version format is described by a comment in a header file as
 /// "the version, in the format major*10000+minor*100+bugfix*1.
 /// This means that 1.2.34 would be returned as 10234."
-/// 
+///
 /// It is not clear if Asar is planned to follow any particular versioning scheme.
 /// If you need a feature and know what version it first appears in,
 /// check if this is less than that.
 pub fn version() -> i32 {
-	unsafe {	
+	unsafe {
 		asar_version() as i32
 	}
 }
 
 /// Provides Asar’s API version in its characteristic version format.
-/// 
+///
 /// Note that this is the version of the API specifically and does not guarantee
 /// any assembler features. If you need to check for a feature’s presence, you
 /// should check version().
-/// 
+///
 /// Asar’s version format is described by a comment in a header file as
 /// "the version, in the format major*10000+minor*100+bugfix*1.
 /// This means that 1.2.34 would be returned as 10234."
-/// 
+///
 /// Note that although this function is provided, this module already checks
 /// Asar’s API version. Just about the only case you would need to call this
 /// is to check for a bugfix released and not yet checked by the module.
-/// 
+///
 /// Perhaps notably, calling this function before initializing Asar sets a flag
 /// in Asar, which changes its API behavior slightly, but this module’s init()
 /// always calls this function first, so this change cannot be observed.
@@ -222,14 +222,14 @@ pub fn api_version() -> i32 {
 }
 
 /// Initialize Asar and check its API version.
-/// 
+///
 /// This function checks if the Asar loaded reports the same API version as
 /// this module expects. If it is too high (possibly incompatible) or too low
 /// (also possibly incompatible) it immediately reports failure.
-/// 
+///
 /// If the API version matches it calls Asar’s own initializer and reports
 /// whether that failed or not.
-/// 
+///
 /// Asar does not currently provide information about initialization beyond
 /// whether it failed or succeeded.
 #[must_use]
@@ -253,7 +253,7 @@ pub fn init() -> bool {
 
 /// Resets Asar. Mostly useless.
 ///
-/// Asar already resets most values itself when it begins patching - 
+/// Asar already resets most values itself when it begins patching -
 /// otherwise matching labels would cause errors.
 /// The only real uses would involve asar_resolvedefines, which is a deeply
 /// dysfunctional routine to begin with and not yet supported by this module.
@@ -264,7 +264,7 @@ pub fn reset() -> bool {
 }
 
 /// Reports Asar’s maximum allowed ROM size.
-/// 
+///
 /// A signed C integer is provided by Asar but is expanded to usize because
 /// its primary use is for initializing buffers.
 pub fn max_rom_size() -> usize {
@@ -274,7 +274,7 @@ pub fn max_rom_size() -> usize {
 }
 
 /// Performs Asar-style math operations on a string.
-/// 
+///
 /// Depending on the last patch applied, may or may not include the xkas-style
 /// lack of order-of-operations and uncomfortable rounding rules.
 /// Note that Asar itself returns a double-precision float, for reasons unknowable.
@@ -297,7 +297,7 @@ pub fn math(expression: &str) -> Result<f64, String> {
 }
 
 /// Applies a patch, from the given path, to the ROM in buffer.
-/// 
+///
 /// This may result in the ROM being expanded.
 /// After this, Asar keeps its set of labels and defines available until reset()
 /// or patch() is called.
@@ -309,7 +309,7 @@ pub fn patch(path: &Path, rom: &mut RomBuf) -> AResult<()> {
 				   rom.buf.as_mut_ptr() as *mut c_char,
 				   rom.buf.len() as c_int, &mut size);
 		CString::from_raw(raw_path);
-		
+
 		let warns = all_warnings();
 		match all_errors() {
 			Some(errs) => Err((errs, warns)),
@@ -319,7 +319,7 @@ pub fn patch(path: &Path, rom: &mut RomBuf) -> AResult<()> {
 }
 
 /// Retrieves a label from the last applied patch.
-/// 
+///
 /// Note that Asar returns this as a signed C integer, but it is expanded to
 /// a usize because its primary use is as an address.
 /// Also note that this provides a *mapped* address, the conversion of which
@@ -342,12 +342,12 @@ pub fn label(name: &str) -> Option<usize> {
 }
 
 /// Provide’s Asar’s list of labels from the last applied patch.
-/// 
+///
 /// Note that Asar provides psuedo-labels through as well,
 /// such as the position +/- labels, under their ugly internal names.
 /// This information is not sufficient to infer their parent label.
 /// These labels are prefixed by ':' and may be ignored.
-/// 
+///
 /// For more info see `asar::label`.
 pub fn all_labels() -> HashMap<String, usize> {
 	asar_map_convert(
@@ -358,11 +358,11 @@ pub fn all_labels() -> HashMap<String, usize> {
 }
 
 /// Returns a define from the last applied patch.
-/// 
+///
 /// A define maps a string (its name) to another string (its value).
 /// Its name must fit `[a-zA-Z0-9_]+`.
 /// Note that this allows digits as the first character.
-/// 
+///
 /// A define’s name is necessarily valid UTF-8 but its contents are not.
 /// Currently, define values are therefore lossy, although Asar would
 /// probably not accept the contents of any define lost.
@@ -381,7 +381,7 @@ pub fn define(name: &str) -> Option<String> {
 }
 
 /// Provides Asar’s list of defines from the last applied patch.
-/// 
+///
 /// For more info see `asar::label`.
 pub fn all_defines() -> HashMap<String, String> {
 	asar_map_convert(

@@ -10,7 +10,7 @@ incsrc "options.asm"
 ; They will never be good.
 ; However, I, personally, refuse to do this because I have dreams.
 ; As such Daiyousei allows opting out of ‘auto-detecting’ the SA-1 pack
-; (I seriously cannot state too many times how presumptuous this ‘detection’ 
+; (I seriously cannot state too many times how presumptuous this ‘detection’
 ;  is, it is 0% difficult to put in a separate flag byte)
 ; by either setting options.asm with !opt_vitorSA1 = 0 or by setting the unused
 ; vector $fff0 to ASCII "NO".

@@ -22,14 +22,14 @@ pub fn parse_list(list: &str) -> Result<InsertList, String> {
 fn parse_newstyle(list: &str) -> Result<HashMap<Genus, Vec<(u32, PathBuf)>>, String> {
 	let mut genus = Genus::Std;
 	let mut hm = HashMap::new();
-	
+
 	for line in list.lines().map(str::trim) {
 		let mut here = line.chars();
 		let first = match here.next() {
 			Some(ch) => ch,
 			None => continue,
 		};
-		
+
 		if first == '@' {
 			genus = try!(Genus::from_str(here.as_str()));
 		} else if first == '#' {
@@ -37,14 +37,14 @@ fn parse_newstyle(list: &str) -> Result<HashMap<Genus, Vec<(u32, PathBuf)>>, Str
 			if num >= 0x400 {
 				return Err(format!("sprite number too high: #{:03x}", num));
 			}
-			
+
 			let v = hm.entry(genus).or_insert_with(Vec::new);
 			v.push((num, path));
 		} else {
 			return Err(format!("cannot start a command with '{}'", first));
 		};
 	};
-	
+
 	Ok(hm)
 }
 
@@ -54,22 +54,22 @@ fn sprite_line(line: &str) -> Result<(u32, PathBuf), String> {
 		(Some(s0), Some(s1)) => (s0,s1),
 		_ => return Err(String::from("# needs a sprite number and path")),
 	};
-	
+
 	let num = try!(sprite_num(num_s));
 	let path = Path::new(path_s.trim_left()).to_path_buf();
-	
+
 	Ok((num, path))
-} 
+}
 
 fn parse_oldstyle(list: &str) -> Result<HashMap<Genus, Vec<(u32, PathBuf)>>, String> {
 	let mut hm = HashMap::new();
 
 	let mut it = list.split_whitespace();
-	
+
 	while let Some(num_s) = it.next() {
 		if let Some(path_s) = it.next() {
 			let num = try!(sprite_num(num_s));
-			
+
 			let genus;
 			if num < 0xc0 {
 				genus = Genus::Std;
@@ -80,17 +80,17 @@ fn parse_oldstyle(list: &str) -> Result<HashMap<Genus, Vec<(u32, PathBuf)>>, Str
 			} else {
 				return Err(String::from("Invalid sprite number for old-style CFG"));;
 			}
-			
+
 			let num = num + 0x100;
 			let path = PathBuf::from(path_s);
-			
+
 			let prevs = hm.entry(genus).or_insert_with(Vec::new);
-			prevs.push((num, path));			
+			prevs.push((num, path));
 		} else {
 			return Err(String::from("sprite number needs path"));
 		}
 	}
-	
+
 	Ok(hm)
 }
 
