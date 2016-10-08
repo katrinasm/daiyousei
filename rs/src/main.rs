@@ -246,29 +246,33 @@ fn patch_subroutines(rom: &mut RomBuf, patch_dir: &Path, base_dir: &Path) -> asa
 	let mut namespace_id = random::<u32>();
 	usrf.write_all(prelude.as_bytes()).unwrap();
 
-	for entry in read_dir(usr_dir_path).unwrap() {
-		let p = entry.unwrap().path();
-		if p.extension() == Some(&std::ffi::OsString::from("asm")) {
-			println!("Subroutines in [{}] [DYS_AUTOSPACE_{:08X}]",
-				p.to_string_lossy(), namespace_id);
-			let mut f = File::open(p).unwrap();
-			let mut usr_buf = Vec::new();
-			f.read_to_end(&mut usr_buf).unwrap();
-			usrf.write_all(format!("\r\nnamespace DYS_AUTOSPACE_{:08X}\r\n",
-				namespace_id).as_bytes()).unwrap();
-			usrf.write_all(&usr_buf).unwrap();
-			namespace_id += 1;
+	let dir = read_dir(usr_dir_path);
+
+	if dir.is_ok() {
+		for entry in dir.unwrap() {
+			let p = entry.unwrap().path();
+			if p.extension() == Some(&std::ffi::OsString::from("asm")) {
+				println!("Subroutines in [{}] [DYS_AUTOSPACE_{:08X}]",
+					p.to_string_lossy(), namespace_id);
+				let mut f = File::open(p).unwrap();
+				let mut usr_buf = Vec::new();
+				f.read_to_end(&mut usr_buf).unwrap();
+				usrf.write_all(format!("\r\nnamespace DYS_AUTOSPACE_{:08X}\r\n",
+					namespace_id).as_bytes()).unwrap();
+				usrf.write_all(&usr_buf).unwrap();
+				namespace_id += 1;
+			};
 		};
+
+		try!(asar::patch(&usrf_path, rom));
+
+		for print in asar::prints() {
+			ptrf.write_all(print.as_bytes()).unwrap();
+			ptrf.write_all(b"\r\n").unwrap();
+		};
+
+		ptrf.sync_all().unwrap();
 	};
-
-	try!(asar::patch(&usrf_path, rom));
-
-	for print in asar::prints() {
-		ptrf.write_all(print.as_bytes()).unwrap();
-		ptrf.write_all(b"\r\n").unwrap();
-	};
-
-	ptrf.sync_all().unwrap();
 
 	Ok(((), vec![]))
 }
