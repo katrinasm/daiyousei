@@ -18,7 +18,7 @@ TILEMAP:
 	db $8e, $ae
 	db $8e, $ee
 	db $ce, $ae
-	
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; init JSL
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -50,7 +50,7 @@ Main:
 
 	jsl !ssr_Offscreen_X0
 	inc !spr_miscG,x
-	
+
 	lda !spr_miscD,x : and #$01 : beq +
 	lda !spr_miscG,x : lsr #3 : and #$01
 +	sta !spr_miscI,x
@@ -59,7 +59,7 @@ Main:
 	lda !throwTimer,x : cmp #$10 : bcs JUMP_BIRDO  ; if Birdo is about to spit,
 	lda #$02 : sta !spr_miscI,x                    ; change pose to spitting
 	; Birdo isn’t counted as moved this frame
-	inc !spr_timeA,x                               
+	inc !spr_timeA,x
 	inc !jumpTimer,x
 	stz !spr_spdX,x
 	lda !throwTimer,x : bne NO_RESET
@@ -100,12 +100,12 @@ WALK_BIRDO:
 	lda X_SPEED,y           ; | set y speed
 	sta !spr_spdX,x               ; /
 	bra APPLY_SPEED
-                    
+
 CHANGE_SPEED:
 	lda TIME_IN_POS,y       ;A:0001 X:0007 Y:0000 D:0000 DB:01 S:01F5 P:envMXdiZCHC:0654 VC:057 00 FL:24235
 	sta !spr_timeA,x             ;A:0020 X:0007 Y:0000 D:0000 DB:01 S:01F5 P:envMXdizCHC:0686 VC:057 00 FL:24235
 	inc !spr_miscD,x
-                    
+
 APPLY_SPEED:
 	jsl !ssr_Move            ; update position based on speed values
 
@@ -115,9 +115,9 @@ APPLY_SPEED:
 	inc !spr_miscD,x             ; /
 
 DONT_CHANGE_DIR:
-	jsl !ssr_CollideSpr      ; interact with other sprites               
+	jsl !ssr_CollideSpr      ; interact with other sprites
 	jsl !ssr_CollidePlayer   ; check for mario/hammer bro contact
-NO_CONTACT:       
+NO_CONTACT:
 	rtl                     ; return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -132,7 +132,7 @@ SUB_HAMMER_THROW:
 	ora !spr_offscreenV,x             ;  |
 	ora !spr_beingEaten,x
 	bne .ret
-	
+
 	lda !spr_xProps1,x : lsr : bcs .custom
 .bulletBill
 	stz $01
@@ -141,26 +141,26 @@ SUB_HAMMER_THROW:
 .custom
 	lda !spr_extraBit,x : sta $01
 	lda !spr_custNum,x : inc : sta $00
-+	
++
 	jsl !ssr_SpawnSprite
 	bmi .ret
 	lda #$20 : sta !WB|$1df9
-	
+
 	phy
 	lda !spr_facing,x : tay
 	lda !spr_posXL,x : clc : adc X_OFFSET,y
 	ply
 	sta !DP|!spr_posXL,y
-	
+
 	phy
 	lda !spr_facing,x : tay
 	lda !spr_posXH,x : adc X_OFFSET2,y
 	ply
 	sta !DP|!spr_posXH,y
-	
+
 	lda !spr_posYL,x : sec : sbc #$0e : sta !DP|!spr_posYL,y
 	lda !spr_posYH,x : sbc #$00 : sta !DP|!spr_posYH,y
-	
+
 	lda !spr_facing,x
 	tyx
 	; The bullet bill uses miscA for its direction instead of facing like other sprites.
@@ -176,16 +176,8 @@ SUB_HAMMER_THROW:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SUB_GFX:
-	lda !spr_posYL,x
-	pha
-	sec : sbc #$10 : sta !spr_posYL,x
-	lda !spr_posYH,x
-	pha
-	sbc #$00 : sta !spr_posYH,x
 	rep #$20
 	ldy !spr_miscI,x
 	lda.w #TILEMAP
 	jsl !ssr_GenericGfx_16x32
-	pla : sta !spr_posYH,x
-	pla : sta !spr_posYL,x
 	rts
