@@ -225,7 +225,17 @@ impl SpriteCfg {
 
 }
 
+fn default_name(path: &Path, gen: Genus, id: u16) -> (String, String) {
+	let root = match path.file_stem() {
+		Some(s) => s.to_string_lossy().into_owned(),
+		None => format!("Custom {} #{:03x}", gen.shortname(), id),
+	};
+	(root.clone(), root + " (extra bit set)")
+}
+
 fn parse_newstyle(path: &Path, gen: Genus, id: u16, buf: &str) -> Result<SpriteCfg, CfgErr> {
+	let (mut got_name, mut got_desc): (Option<String>, Option<String>) = (None, None);
+
 	let mut cfg = SpriteCfg { genus: gen, id: id, .. SpriteCfg::new() };
 	let mut buf = buf;
 	while let IResult::Done(rest, (name, value)) = cfg_line(buf) {
@@ -238,8 +248,8 @@ fn parse_newstyle(path: &Path, gen: Genus, id: u16, buf: &str) -> Result<SpriteC
 			"ext-props"    => try!(read_bytes(value, &mut cfg.prop_bytes)),
 			"dys-opts"     => try!(read_bytes(value, &mut cfg.dys_option_bytes)),
 			"ext-clip"     => try!(read_bytes(value, &mut cfg.clipping)),
-			"name"         => cfg.name = String::from(value),
-			"description"  => cfg.desc = String::from(value),
+			"name"         => got_name = Some(String::from(value)),
+			"description"  => got_desc = Some(String::from(value)),
 			"desc-set"     => cfg.desc_set = Some(String::from(value)),
 			"name-set"     => cfg.name_set = Some(String::from(value)),
 			"ext-prop-def" => (),
@@ -247,6 +257,21 @@ fn parse_newstyle(path: &Path, gen: Genus, id: u16, buf: &str) -> Result<SpriteC
 			"tilemap"      => (),
 			_ => return Err(CfgErr { explain: format!("bad field name: \"{}\"", name) }),
 		};
+	};
+
+	if let Some(s) = got_name {
+		cfg.name = s;
+	} else {
+		let t = default_name(path, gen, id);
+		cfg.name = t.0;
+		cfg.name_set = Some(t.1);
+	};
+
+	if let Some(s) = got_desc {
+		cfg.desc = s;
+	} else {
+		cfg.desc = cfg.name.clone();
+		cfg.desc_set = cfg.name_set.clone();
 	};
 
 	if cfg.source_path.file_name() == None {
@@ -267,6 +292,9 @@ fn parse_oldstyle(path: &Path, gen: Genus, id: u16, buf: &str) -> Result<SpriteC
 		}
 	};
 
+	let (name, name_set) = default_name(path, gen, id);
+	let (desc, desc_set) = (name.clone(), name_set.clone());
+
 	if let Some(s) = it.next() {
 		Ok(SpriteCfg {
 			genus:       gen,
@@ -275,6 +303,10 @@ fn parse_oldstyle(path: &Path, gen: Genus, id: u16, buf: &str) -> Result<SpriteC
 			tweak_bytes: [d[1], d[2], d[3], d[4], d[5], d[6]],
 			prop_bytes:  [d[7], d[8]],
 			source_path: path.with_file_name(s),
+			name:        name,
+			name_set:    Some(name_set),
+			desc:        desc,
+			desc_set:    Some(desc_set),
 			.. SpriteCfg::new()
 		})
 	} else {
