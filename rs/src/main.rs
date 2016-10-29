@@ -145,7 +145,7 @@ fn main() {
 		let mwt_path = rom_path.with_extension("mwt");
 		let mut mwt_file = OpenOptions::new().write(true).create(true).open(mwt_path).unwrap();
 
-		desclist::write_collection(&mut mwt_file, &mut mw2_file, &cfgs);
+		require_ok!(desclist::write_collection(&mut mwt_file, &mut mw2_file, &cfgs));
 		println!("done!");
 	};
 }

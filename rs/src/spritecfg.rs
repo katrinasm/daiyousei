@@ -2,7 +2,7 @@
 extern crate asar;
 use std::path::{PathBuf, Path};
 use std::io::prelude::*;
-use std::fs::{File, OpenOptions, remove_file};
+use std::fs::{File, OpenOptions};
 use nom::*;
 
 use asar::rom::RomBuf;
