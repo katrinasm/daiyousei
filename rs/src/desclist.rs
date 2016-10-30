@@ -5,7 +5,7 @@ use std::io::prelude::*;
 
 use spritecfg;
 
-pub fn write_desclist(f: &mut File, cfgs: &Vec<spritecfg::SpriteCfg>) {
+pub fn write_desclist(f: &mut File, cfgs: &[spritecfg::SpriteCfg]) {
 	for cfg in cfgs.iter().filter(|cfg| cfg.placeable()) {
 		if cfg.id >= 0x200 {
 			continue;
@@ -43,7 +43,7 @@ pub fn write_desclist(f: &mut File, cfgs: &Vec<spritecfg::SpriteCfg>) {
 	};
 }
 
-pub fn write_collection(mwt: &mut File, mw2: &mut File, cfgs: &Vec<spritecfg::SpriteCfg>) -> io::Result<()> {
+pub fn write_collection(mwt: &mut File, mw2: &mut File, cfgs: &[spritecfg::SpriteCfg]) -> io::Result<()> {
 	let mut bytes = Vec::<u8>::new();
 	bytes.push(0);
 	for cfg in cfgs.iter().filter(|cfg| cfg.placeable()) {

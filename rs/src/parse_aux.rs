@@ -13,12 +13,10 @@ fn positive_w_radix(inp: &str, radix: u32) -> IResult<&str, u32> {
 			acc *= radix;
 			acc += v;
 			read = true;
+		} else if read {
+			return IResult::Done(here.as_str(), acc);
 		} else {
-			if read {
-				return IResult::Done(here.as_str(), acc);
-			} else {
-				break;
-			}
+			break;
 		}
 	}
 	panic!("NO NUMBER");
