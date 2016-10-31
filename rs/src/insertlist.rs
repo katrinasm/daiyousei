@@ -100,3 +100,22 @@ fn sprite_num(s: &str) -> Result<u32, String> {
 		Err(_) => Err(format!("\"{}\" is not a valid sprite number", s)),
 	}
 }
+
+#[cfg(test)]
+mod test {
+	use std::collections::HashMap;
+	use std::path::PathBuf;
+
+	use genus::Genus;
+	use super::parse_oldstyle;
+
+	#[test]
+	fn simple_old_style() {
+		let input = "00 donut_lift.cfg\n01 blooper.cfg\n";
+		let mut expected = HashMap::new();
+		expected.insert(Genus::Std,
+		                vec![(0x100, PathBuf::from("donut_lift.cfg")),
+		                     (0x101, PathBuf::from("blooper.cfg"))]);
+		assert_eq!(parse_oldstyle(input), Ok(expected));
+	}
+}
