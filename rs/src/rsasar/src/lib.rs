@@ -6,8 +6,6 @@ use rom::RomBuf;
 use std::ptr;
 use std::ffi::CStr;
 use std::ffi::CString;
-use std::slice;
-use std::result;
 use std::fmt;
 use std::error::Error;
 use std::collections::HashMap;
