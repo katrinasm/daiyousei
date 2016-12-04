@@ -18,13 +18,10 @@ pub fn write_desclist(f: &mut File, cfgs: &Vec<spritecfg::SpriteCfg>) {
 			byte0,
 			byte1,
 			cfg.desc(false),
-		).unwrap();
+		)
+			.unwrap();
 
-		writeln!(f, "{:02x}\t{:02x}\t{}",
-			byte0,
-			m16byte,
-			"0,0,0000 4,4,010a"
-		).unwrap();
+		writeln!(f, "{:02x}\t{:02x}\t{}", byte0, m16byte, "0,0,0000 4,4,010a").unwrap();
 
 		let byte1_s = byte1 | 0x10;
 		let m16byte_s = m16byte | 0x10;
@@ -32,14 +29,16 @@ pub fn write_desclist(f: &mut File, cfgs: &Vec<spritecfg::SpriteCfg>) {
 			byte0,
 			byte1_s,
 			cfg.desc(true),
-		).unwrap();
+		)
+			.unwrap();
 
-		writeln!(f, "{:02x}\t{:02x}\t{}",
-			byte0,
-			m16byte_s,
-			"0,0,0000 3,4,010c, 6,4,010a"
-		).unwrap();
-	};
+		writeln!(f,
+		         "{:02x}\t{:02x}\t{}",
+		         byte0,
+		         m16byte_s,
+		         "0,0,0000 3,4,010c, 6,4,010a")
+			.unwrap();
+	}
 }
 
 pub fn write_collection(mwt: &mut File, mw2: &mut File, cfgs: &Vec<spritecfg::SpriteCfg>) {
@@ -52,7 +51,7 @@ pub fn write_collection(mwt: &mut File, mw2: &mut File, cfgs: &Vec<spritecfg::Sp
 			cfg.place_mw2(&mut bytes, true);
 			writeln!(mwt, "\t{}", cfg.name(true)).unwrap();
 		};
-	};
+	}
 	bytes.push(0xff);
 
 	mw2.write_all(&bytes);

@@ -44,13 +44,13 @@ impl Genus {
 
 	pub fn from_str(name: &str) -> Result<Genus, String> {
 		match name {
-			"standard"  => Ok(Genus::Std),
-			"shooter"   => Ok(Genus::Sht),
+			"standard" => Ok(Genus::Std),
+			"shooter" => Ok(Genus::Sht),
 			"generator" => Ok(Genus::Gen),
-			"run-once"  => Ok(Genus::R1s),
-			"cluster"   => Ok(Genus::Cls),
-			"scroll"    => Ok(Genus::Scl),
-			_           => Err(String::from("Bad sprite type")),
+			"run-once" => Ok(Genus::R1s),
+			"cluster" => Ok(Genus::Cls),
+			"scroll" => Ok(Genus::Scl),
+			_ => Err(String::from("Bad sprite type")),
 		}
 	}
 
