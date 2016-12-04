@@ -47,7 +47,7 @@ pub struct PatchError {
 impl fmt::Display for AsmError {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match self {
-			&AsmError::Patch(ref pe)     => write!(f, "{}", pe.fulldata),
+			&AsmError::Patch(ref pe) => write!(f, "{}", pe.fulldata),
 			&AsmError::Interface(ref ie) => write!(f, "{}", ie),
 		}
 	}
@@ -83,8 +83,8 @@ pub struct Label {
 /// part of the name.
 #[derive(Debug)]
 pub struct Define {
-pub name: String,
-pub contents: String,
+	pub name: String,
+	pub contents: String,
 }
 
 pub type AResult<T> = Result<(T, Vec<AsmError>), (Vec<AsmError>, Vec<AsmError>)>;
@@ -113,14 +113,16 @@ struct raw_definedata {
 }
 
 #[link(name = "asar", kind = "dylib")]
-extern {
+extern "C" {
 	fn asar_version() -> c_int;
 	fn asar_apiversion() -> c_int;
 	fn asar_init() -> c_bool;
 	fn asar_reset() -> c_bool;
-	fn asar_patch(patchloc: *const c_char, romdata: *mut c_char,
-	              buflen: c_int, romlen: *mut c_int)
-	           -> c_bool;
+	fn asar_patch(patchloc: *const c_char,
+	              romdata: *mut c_char,
+	              buflen: c_int,
+	              romlen: *mut c_int)
+	              -> c_bool;
 	fn asar_maxromsize() -> c_int;
 	fn asar_close() -> ();
 	fn asar_geterrors(count: *mut c_int) -> *const raw_errordata;
@@ -135,7 +137,7 @@ extern {
 }
 
 unsafe fn asar_array_info<T>(getarray: unsafe extern "C" fn(*mut c_int) -> *const T)
--> (*const T, usize) {
+                             -> (*const T, usize) {
 	let mut cnt: c_int = 0;
 	let ptr = getarray(&mut cnt);
 	if ptr.is_null() {
@@ -144,41 +146,39 @@ unsafe fn asar_array_info<T>(getarray: unsafe extern "C" fn(*mut c_int) -> *cons
 	(ptr, cnt as usize)
 }
 
-fn asar_array_convert<T, U, F>(
-		getarray: unsafe extern "C" fn(*mut c_int) -> *const T,
-		convert: F)
-		-> Vec<U>
-		where F: Fn(&T) -> U
-		{
+fn asar_array_convert<T, U, F>(getarray: unsafe extern "C" fn(*mut c_int) -> *const T,
+                               convert: F)
+                               -> Vec<U>
+	where F: Fn(&T) -> U
+{
 	let (ptr, len) = unsafe { asar_array_info(getarray) };
 
 	let mut v = Vec::with_capacity(len);
 
-	for i in 0 .. len {
+	for i in 0..len {
 		let r = unsafe { &*ptr.offset(i as isize) };
 		v.push(convert(r));
-	};
+	}
 
 	v
 }
 
-fn asar_map_convert<T: Sized, K, V, FK, FV>(
-		getarray: unsafe extern "C" fn(*mut c_int) -> *const T,
-		kconvert: FK,
-		vconvert: FV)
-		-> HashMap<K, V>
-		where K: std::hash::Hash + Eq,
-		      FK: Fn(&T) -> K,
-		      FV: Fn(&T) -> V,
-		{
+fn asar_map_convert<T: Sized, K, V, FK, FV>(getarray: unsafe extern "C" fn(*mut c_int) -> *const T,
+                                            kconvert: FK,
+                                            vconvert: FV)
+                                            -> HashMap<K, V>
+	where K: std::hash::Hash + Eq,
+	      FK: Fn(&T) -> K,
+	      FV: Fn(&T) -> V
+{
 	let (ptr, len) = unsafe { asar_array_info(getarray) };
 
 	let mut hm = HashMap::with_capacity(len);
 
-	for i in 0 .. len {
+	for i in 0..len {
 		let r = unsafe { &*ptr.offset(i as isize) };
 		hm.insert(kconvert(r), vconvert(r));
-	};
+	}
 
 	hm
 }
@@ -193,9 +193,7 @@ fn asar_map_convert<T: Sized, K, V, FK, FV>(
 /// If you need a feature and know what version it first appears in,
 /// check if this is less than that.
 pub fn version() -> i32 {
-	unsafe {
-		asar_version() as i32
-	}
+	unsafe { asar_version() as i32 }
 }
 
 /// Provides Asar’s API version in its characteristic version format.
@@ -216,9 +214,7 @@ pub fn version() -> i32 {
 /// in Asar, which changes its API behavior slightly, but this module’s init()
 /// always calls this function first, so this change cannot be observed.
 pub fn api_version() -> i32 {
-	unsafe {
-		asar_apiversion() as i32
-	}
+	unsafe { asar_apiversion() as i32 }
 }
 
 /// Initialize Asar and check its API version.
@@ -237,17 +233,15 @@ pub fn init() -> bool {
 	// This call serves both to check version and to set an asar flag for
 	// the API.
 	let v = api_version();
-	if v < EXPECTED_API_VER || v/100 > EXPECTED_API_VER/100 {
+	if v < EXPECTED_API_VER || v / 100 > EXPECTED_API_VER / 100 {
 		false
 	} else {
-		/* asardll.c’s asar_init has a bunch of checks to make sure functions
-		load. But rustc checks the symbols at link time, as long as they’re
-		used in a function somewhere.
-		Conveneniently, we have a wrapper function for each asar function, so
-		they are all checked, and we can rely on the linker instead. */
-		unsafe {
-			asar_init() != 0
-		}
+		// asardll.c’s asar_init has a bunch of checks to make sure functions
+		// load. But rustc checks the symbols at link time, as long as they’re
+		// used in a function somewhere.
+		// Conveneniently, we have a wrapper function for each asar function, so
+		// they are all checked, and we can rely on the linker instead.
+		unsafe { asar_init() != 0 }
 	}
 }
 
@@ -258,9 +252,7 @@ pub fn init() -> bool {
 /// The only real uses would involve asar_resolvedefines, which is a deeply
 /// dysfunctional routine to begin with and not yet supported by this module.
 pub fn reset() -> bool {
-	unsafe {
-		asar_reset() != 0
-	}
+	unsafe { asar_reset() != 0 }
 }
 
 /// Reports Asar’s maximum allowed ROM size.
@@ -268,9 +260,7 @@ pub fn reset() -> bool {
 /// A signed C integer is provided by Asar but is expanded to usize because
 /// its primary use is for initializing buffers.
 pub fn max_rom_size() -> usize {
-	unsafe {
-		asar_maxromsize() as usize
-	}
+	unsafe { asar_maxromsize() as usize }
 }
 
 /// Performs Asar-style math operations on a string.
@@ -291,8 +281,7 @@ pub fn math(expression: &str) -> Result<f64, String> {
 				Err(CStr::from_ptr(errs).to_string_lossy().into_owned())
 			}
 		},
-		Err(_) => Err(format!("Invalid math string {:?}: contains NUL",
-		                          expression))
+		Err(_) => Err(format!("Invalid math string {:?}: contains NUL", expression)),
 	}
 }
 
@@ -306,14 +295,15 @@ pub fn patch(path: &Path, rom: &mut RomBuf) -> AResult<()> {
 		let raw_path = CString::new(path.to_str().unwrap()).unwrap().into_raw();
 		let mut size = rom.size as c_int;
 		asar_patch(raw_path,
-				   rom.buf.as_mut_ptr() as *mut c_char,
-				   rom.buf.len() as c_int, &mut size);
+		           rom.buf.as_mut_ptr() as *mut c_char,
+		           rom.buf.len() as c_int,
+		           &mut size);
 		CString::from_raw(raw_path);
 
 		let warns = all_warnings();
 		match all_errors() {
 			Some(errs) => Err((errs, warns)),
-			None       => Ok(((), warns)),
+			None => Ok(((), warns)),
 		}
 	}
 }
@@ -330,11 +320,7 @@ pub fn label(name: &str) -> Option<usize> {
 			let raw_name = cs_name.into_raw();
 			let v = asar_getlabelval(raw_name);
 			CString::from_raw(raw_name);
-			if v >= 0 {
-				Some(v as usize)
-			} else {
-				None
-			}
+			if v >= 0 { Some(v as usize) } else { None }
 		}
 	} else {
 		None
@@ -350,11 +336,9 @@ pub fn label(name: &str) -> Option<usize> {
 ///
 /// For more info see `asar::label`.
 pub fn all_labels() -> HashMap<String, usize> {
-	asar_map_convert(
-		asar_getalllabels,
-		|raw_label| { copy_asar_string(raw_label.name).unwrap() },
-		|raw_label| { raw_label.location as usize },
-	)
+	asar_map_convert(asar_getalllabels,
+	                 |raw_label| copy_asar_string(raw_label.name).unwrap(),
+	                 |raw_label| raw_label.location as usize)
 }
 
 /// Returns a define from the last applied patch.
@@ -384,16 +368,14 @@ pub fn define(name: &str) -> Option<String> {
 ///
 /// For more info see `asar::label`.
 pub fn all_defines() -> HashMap<String, String> {
-	asar_map_convert(
-		asar_getalldefines,
-		|raw_define| { copy_asar_string(raw_define.name).unwrap() },
-		|raw_define| { copy_asar_string(raw_define.contents).unwrap() },
-	)
+	asar_map_convert(asar_getalldefines,
+	                 |raw_define| copy_asar_string(raw_define.name).unwrap(),
+	                 |raw_define| copy_asar_string(raw_define.contents).unwrap())
 }
 
 /// Provides all printed strings from the last applied patch.
 pub fn prints() -> Vec<String> {
-	asar_array_convert(asar_getprints, |s| { copy_asar_string(*s).unwrap() })
+	asar_array_convert(asar_getprints, |s| copy_asar_string(*s).unwrap())
 }
 
 fn all_errors() -> Option<Vec<AsmError>> {
@@ -406,34 +388,27 @@ fn all_warnings() -> Vec<AsmError> {
 }
 
 fn one_error(raw_err: &raw_errordata) -> AsmError {
-	AsmError::Patch(
-		PatchError {
-			fulldata: copy_asar_string(raw_err.fullerrdata)
-				.unwrap_or(String::from("<error decoding error>")),
-			rawdata: copy_asar_string(raw_err.rawerrdata)
-				.unwrap_or(String::from("<error decoding error>")),
-			block: copy_asar_string(raw_err.block),
-			filename: copy_asar_string(raw_err.filename)
-				.unwrap_or(String::from("<unknown filename>")),
-			caller_filename: copy_asar_string(raw_err.callerfilename),
-			line: raw_err.line as i32,
-			caller_line: if raw_err.callerline != 0 {
-				Some(raw_err.callerline as i32)
-			} else {
-				None
-			},
-		}
-	)
+	AsmError::Patch(PatchError {
+		fulldata: copy_asar_string(raw_err.fullerrdata)
+			.unwrap_or(String::from("<error decoding error>")),
+		rawdata: copy_asar_string(raw_err.rawerrdata)
+			.unwrap_or(String::from("<error decoding error>")),
+		block: copy_asar_string(raw_err.block),
+		filename: copy_asar_string(raw_err.filename).unwrap_or(String::from("<unknown filename>")),
+		caller_filename: copy_asar_string(raw_err.callerfilename),
+		line: raw_err.line as i32,
+		caller_line: if raw_err.callerline != 0 {
+			Some(raw_err.callerline as i32)
+		} else {
+			None
+		},
+	})
 }
 
 fn copy_asar_string(ptr: *const c_char) -> Option<String> {
 	if ptr.is_null() {
 		None
 	} else {
-		unsafe {
-			Some(String::from(
-				CStr::from_ptr(ptr).to_string_lossy().into_owned()
-			))
-		}
+		unsafe { Some(String::from(CStr::from_ptr(ptr).to_string_lossy().into_owned())) }
 	}
 }
