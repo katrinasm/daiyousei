@@ -220,8 +220,8 @@ impl SpriteCfg {
 		for _ in 0 .. self.extra_bytes { target.push(0); };
 	}
 
-	pub fn dys_option_bytes<'a>(&'a self) -> &'a [u8] { &self.dys_option_bytes }
-	pub fn source_path<'a>(&'a self) -> &'a PathBuf { &self.source_path }
+	pub fn dys_option_bytes(&self) -> &[u8] { &self.dys_option_bytes }
+	pub fn source_path(&self) -> &PathBuf { &self.source_path }
 
 }
 
@@ -252,9 +252,7 @@ fn parse_newstyle(path: &Path, gen: Genus, id: u16, buf: &str) -> Result<SpriteC
 			"description"  => got_desc = Some(String::from(value)),
 			"desc-set"     => cfg.desc_set = Some(String::from(value)),
 			"name-set"     => cfg.name_set = Some(String::from(value)),
-			"ext-prop-def" => (),
-			"m16d"         => (),
-			"tilemap"      => (),
+			"ext-prop-def" | "m16d" | "tilemap" => (),
 			_ => return Err(CfgErr { explain: format!("bad field name: \"{}\"", name) }),
 		};
 	};
@@ -284,9 +282,9 @@ fn parse_newstyle(path: &Path, gen: Genus, id: u16, buf: &str) -> Result<SpriteC
 fn parse_oldstyle(path: &Path, gen: Genus, id: u16, buf: &str) -> Result<SpriteCfg, CfgErr> {
 	let mut it = buf.split_whitespace().skip(1);
 	let mut d = [0u8; 9];
-	for i in 0 .. 9 {
+	for output_byte in &mut d {
 		if let Some(s) = it.next() {
-			d[i] = try!(read_byte(s));
+			*output_byte = try!(read_byte(s));
 		} else {
 			return Err(CfgErr{ explain: String::from("Old-style CFG too short") });
 		}
@@ -315,11 +313,11 @@ fn parse_oldstyle(path: &Path, gen: Genus, id: u16, buf: &str) -> Result<SpriteC
 }
 
 fn read_byte(s: &str) -> Result<u8, CfgErr> {
-	let mut iter = s.trim().chars();
+	let iter = s.trim().chars();
 	let mut n = 0u32;
 	let mut read = false;
 
-	while let Some(ch) = iter.next() {
+	for ch in iter {
 		if let Some(v) = ch.to_digit(0x10) {
 			n *= 0x10;
 			n += v;

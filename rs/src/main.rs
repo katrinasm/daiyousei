@@ -104,7 +104,7 @@ fn main() {
 		},
 	};
 
-	for line in asar::prints().into_iter() {
+	for line in asar::prints() {
 		println!("Main patch: {}", line);
 	};
 
@@ -115,14 +115,11 @@ fn main() {
 
 	let cfgs = require_ok!(get_cfgs(groups, &base_dir));
 
-	match insert_sprites(&mut rom, &cfgs, &patch_dir, &dys_data, verbose) {
-		Err((errs, warns)) => {
-			println!("==== Insertion was stopped by an error ====");
-			for err in errs { println!("Error: {}", err); };
-			for warn in warns { println!("Warning: {}", warn); };
-			return;
-		},
-		_ => (),
+	if let Err((errs, warns)) = insert_sprites(&mut rom, &cfgs, &patch_dir, &dys_data, verbose) {
+		println!("==== Insertion was stopped by an error ====");
+		for err in errs { println!("Error: {}", err); };
+		for warn in warns { println!("Warning: {}", warn); };
+		return;
 	};
 
 	print!("Writing rom ... ");
@@ -158,18 +155,16 @@ fn parse_args(argv: env::Args) -> Result<CmdArgs, String> {
 	};
 
 	for s in argv.skip(1) {
-		if s.starts_with("-") {
+		if s.starts_with('-') {
 			for c in s.chars().skip(1) {
 				val.flags.insert(c);
 			}
+		} else if val.romname.is_empty() {
+			val.romname = s;
+		} else if val.listname.is_empty() {
+			val.listname = s;
 		} else {
-			if val.romname.is_empty() {
-				val.romname = s;
-			} else if val.listname.is_empty() {
-				val.listname = s;
-			} else {
-				return Err("Too many names!".to_string());
-			}
+			return Err("Too many names!".to_string());
 		}
 	}
 
@@ -184,8 +179,8 @@ fn get_cfgs(insert_list: insertlist::InsertList, base_dir: &PathBuf)
 -> Result<Vec<SpriteCfg>, String> {
 	let mut cfgs = Vec::<SpriteCfg>::new();
 
-	for (gen, sprites) in insert_list.iter() {
-		for &(id, ref cfg_path) in sprites {
+	for (gen, sprites) in insert_list {
+		for (id, ref cfg_path) in sprites {
 			let mut full_path = base_dir.clone();
 			full_path.push(gen.dir());
 			full_path.push(cfg_path);
@@ -201,7 +196,7 @@ fn get_cfgs(insert_list: insertlist::InsertList, base_dir: &PathBuf)
 				Err(e) => return Err(format!("Error reading {}: {}", full_path.display(), e)),
 			};
 
-			match SpriteCfg::parse(&full_path, *gen, id as u16, &cfg_buf) {
+			match SpriteCfg::parse(&full_path, gen, id as u16, &cfg_buf) {
 				Ok(cfg) => cfgs.push(cfg),
 				Err(e)  => return Err(format!("{}: {:?}", full_path.display(), e)),
 			}
@@ -277,14 +272,14 @@ fn patch_subroutines(rom: &mut RomBuf, patch_dir: &Path, base_dir: &Path) -> asa
 	Ok(((), vec![]))
 }
 
-fn insert_sprites(rom: &mut RomBuf, cfgs: &Vec<SpriteCfg>, patch_dir: &Path, dys_data: &DysTables,
+fn insert_sprites(rom: &mut RomBuf, cfgs: &[SpriteCfg], patch_dir: &Path, dys_data: &DysTables,
 verbose: bool)
 -> asar::AResult<()> {
 	let mut routines = HashMap::<PathBuf, InsertPoint>::new();
 	let prelude = "incsrc \"sprite_prelude.asm\"\r\n";
 	let temploc = patch_dir.join("temp_sprite.asm");
 
-	for ref cfg in cfgs {
+	for cfg in cfgs {
 		let src = &cfg.source_path().to_owned();
 		let (ip, warns) = if routines.contains_key(src) {
 			let ip = *routines.get(src).unwrap();
