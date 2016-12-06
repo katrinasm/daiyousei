@@ -18,11 +18,11 @@ pub struct CfgErr {
 
 #[derive(Debug)]
 pub struct SpriteCfg {
-pub genus: Genus,
-pub id: u16,
-pub tweak_bytes: [u8; 6],
-pub prop_bytes: [u8; 2],
-pub clipping: [u8; 4],
+	pub genus: Genus,
+	pub id: u16,
+	pub tweak_bytes: [u8; 6],
+	pub prop_bytes: [u8; 2],
+	pub clipping: [u8; 4],
 	dys_option_bytes: [u8; 2],
 	acts_like: u8,
 	extra_bytes: u8,
@@ -55,33 +55,39 @@ impl SpriteCfg {
 
 	pub fn new() -> SpriteCfg {
 		SpriteCfg {
-			genus:            Genus::Std,
-			id:               0,
-			tweak_bytes:      [0, 0, 0, 0, 0, 0],
-			prop_bytes:       [0, 0],
-			clipping:         [0, 0, 0, 0],
+			genus: Genus::Std,
+			id: 0,
+			tweak_bytes: [0, 0, 0, 0, 0, 0],
+			prop_bytes: [0, 0],
+			clipping: [0, 0, 0, 0],
 			dys_option_bytes: [0, 0],
-			acts_like:        0,
-			extra_bytes:      0,
-			name:             "".to_string(),
-			desc:             "".to_string(),
-			name_set:         None,
-			desc_set:         None,
-			source_path:      PathBuf::from(""),
+			acts_like: 0,
+			extra_bytes: 0,
+			name: "".to_string(),
+			desc: "".to_string(),
+			name_set: None,
+			desc_set: None,
+			source_path: PathBuf::from(""),
 		}
 	}
 
 	pub fn needs_init(&self) -> bool {
 		match self.genus {
 			Genus::Std => true,
-			_          => false,
+			_ => false,
 		}
 	}
 
-	pub fn placeable(&self) -> bool { self.genus.placeable() }
+	pub fn placeable(&self) -> bool {
+		self.genus.placeable()
+	}
 
-	pub fn assemble(&self, rom: &mut RomBuf, prelude: &str, source: &Path, temp: &Path)
-	-> asar::AResult<InsertPoint> {
+	pub fn assemble(&self,
+	                rom: &mut RomBuf,
+	                prelude: &str,
+	                source: &Path,
+	                temp: &Path)
+	                -> asar::AResult<InsertPoint> {
 		let (mut main, mut init) = (0usize, 0usize);
 		let warns;
 
@@ -97,12 +103,12 @@ impl SpriteCfg {
 
 		let mut srcf = match File::open(source) {
 			Ok(f) => f,
-			Err(e) => return Err((
-				vec![asar::AsmError::Interface(format!("error opening \"{}\": {}",
-					source.to_string_lossy(), e)
-				)],
-				vec![]
-			)),
+			Err(e) => {
+				return Err((vec![asar::AsmError::Interface(format!("error opening \"{}\": {}",
+				                                                   source.to_string_lossy(),
+				                                                   e))],
+				            vec![]))
+			}
 		};
 
 		srcf.read_to_end(&mut source_buf).unwrap();
@@ -111,8 +117,8 @@ impl SpriteCfg {
 		drop(tempasm);
 
 		warns = match asar::patch(temp, rom) {
-			Ok((_, ws))     => ws,
-			Err(ews)        => return Err(ews),
+			Ok((_, ws)) => ws,
+			Err(ews) => return Err(ews),
 		};
 
 		for print in asar::prints() {
@@ -120,32 +126,37 @@ impl SpriteCfg {
 			let fst = chunks.next();
 			let snd = chunks.next();
 			match fst {
-				Some("MAIN") => match snd {
-					Some(ofs) => main = usize::from_str_radix(ofs, 16).unwrap(),
-					_         => return Err((vec![],vec![])),
-				},
-				Some("INIT") => match snd {
-					Some(ofs) => init = usize::from_str_radix(ofs, 16).unwrap(),
-					_         => return Err((vec![],vec![])),
-				},
-				None         => (),
-				_            => return Err((vec![],vec![])),
+				Some("MAIN") => {
+					match snd {
+						Some(ofs) => main = usize::from_str_radix(ofs, 16).unwrap(),
+						_ => return Err((vec![], vec![])),
+					}
+				}
+				Some("INIT") => {
+					match snd {
+						Some(ofs) => init = usize::from_str_radix(ofs, 16).unwrap(),
+						_ => return Err((vec![], vec![])),
+					}
+				}
+				None => (),
+				_ => return Err((vec![], vec![])),
 			}
-		};
-
-		if main == 0 || (init == 0 && self.needs_init()) {
-			return Err((vec![],vec![]));
 		}
 
-		Ok((InsertPoint { main: main, init: init }, warns))
+		if main == 0 || (init == 0 && self.needs_init()) {
+			return Err((vec![], vec![]));
+		}
+
+		Ok((InsertPoint {
+			    main: main,
+			    init: init,
+		    },
+		    warns))
 	}
 
 	pub fn apply_cfg(&self, rom: &mut RomBuf, tables: &DysTables) {
 		match self.genus {
-			Genus::Std
-			| Genus::Gen
-			| Genus::Sht
-			| Genus::R1s => {
+			Genus::Std | Genus::Gen | Genus::Sht | Genus::R1s => {
 				if self.id < 0x200 {
 					let size_ofs = if self.id < 0x100 {
 						self.id as usize
@@ -164,9 +175,9 @@ impl SpriteCfg {
 					rom.set_bytes(optbase + 14, &self.prop_bytes).unwrap();
 					rom.set_bytes(optbase + 10, &self.clipping).unwrap();
 				};
-			},
-			Genus::Cls => {},
-			_            => unimplemented!(),
+			}
+			Genus::Cls => {}
+			_ => unimplemented!(),
 		};
 	}
 
@@ -176,7 +187,7 @@ impl SpriteCfg {
 			g if g.placeable() => {
 				rom.set_long(tables.main_ptrs + ofs, ip.main as u32).unwrap();
 				rom.set_long(tables.init_ptrs + ofs, ip.init as u32).unwrap();
-			},
+			}
 			Genus::Cls => rom.set_long(tables.cls_ptrs + ofs, ip.main as u32).unwrap(),
 			_ => unimplemented!(),
 		};
@@ -198,14 +209,18 @@ impl SpriteCfg {
 		}
 	}
 
-	pub fn uses_ebit(&self) -> bool { self.name_set.is_some() }
+	pub fn uses_ebit(&self) -> bool {
+		self.name_set.is_some()
+	}
 
 	pub fn place_mw2(&self, target: &mut Vec<u8>, ebit: bool) {
-		if !self.placeable() { panic!("Attempted to place unplaceable sprite") };
+		if !self.placeable() {
+			panic!("Attempted to place unplaceable sprite")
+		};
 		let b0 = 0x89;
 		let b1 = 0x80;
-		let num_extra_bit: u8   = if self.id & 0x100 == 0 { 0 } else { 8 };
-		let ebit_val: u8        =                if !ebit { 0 } else { 4 };
+		let num_extra_bit: u8 = if self.id & 0x100 == 0 { 0 } else { 8 };
+		let ebit_val: u8 = if !ebit { 0 } else { 4 };
 
 		let b0 = b0 | num_extra_bit | ebit_val;
 
@@ -217,12 +232,17 @@ impl SpriteCfg {
 		}
 		target.push((self.id & 0xff) as u8);
 
-		for _ in 0 .. self.extra_bytes { target.push(0); };
+		for _ in 0..self.extra_bytes {
+			target.push(0);
+		}
 	}
 
-	pub fn dys_option_bytes(&self) -> &[u8] { &self.dys_option_bytes }
-	pub fn source_path(&self) -> &PathBuf { &self.source_path }
-
+	pub fn dys_option_bytes(&self) -> &[u8] {
+		&self.dys_option_bytes
+	}
+	pub fn source_path(&self) -> &PathBuf {
+		&self.source_path
+	}
 }
 
 fn default_name(path: &Path, gen: Genus, id: u16) -> (String, String) {
@@ -236,26 +256,30 @@ fn default_name(path: &Path, gen: Genus, id: u16) -> (String, String) {
 fn parse_newstyle(path: &Path, gen: Genus, id: u16, buf: &str) -> Result<SpriteCfg, CfgErr> {
 	let (mut got_name, mut got_desc): (Option<String>, Option<String>) = (None, None);
 
-	let mut cfg = SpriteCfg { genus: gen, id: id, .. SpriteCfg::new() };
+	let mut cfg = SpriteCfg {
+		genus: gen,
+		id: id,
+		..SpriteCfg::new()
+	};
 	let mut buf = buf;
 	while let IResult::Done(rest, (name, value)) = cfg_line(buf) {
 		buf = rest;
 		match name {
-			"acts-like"    => cfg.acts_like = try!(read_byte(value)),
-			"source"       => cfg.source_path = path.with_file_name(value),
-			"props"        => try!(read_bytes(value, &mut cfg.tweak_bytes)),
-			"xbytes"       => cfg.extra_bytes = try!(read_byte(value)),
-			"ext-props"    => try!(read_bytes(value, &mut cfg.prop_bytes)),
-			"dys-opts"     => try!(read_bytes(value, &mut cfg.dys_option_bytes)),
-			"ext-clip"     => try!(read_bytes(value, &mut cfg.clipping)),
-			"name"         => got_name = Some(String::from(value)),
-			"description"  => got_desc = Some(String::from(value)),
-			"desc-set"     => cfg.desc_set = Some(String::from(value)),
-			"name-set"     => cfg.name_set = Some(String::from(value)),
+			"acts-like" => cfg.acts_like = try!(read_byte(value)),
+			"source" => cfg.source_path = path.with_file_name(value),
+			"props" => try!(read_bytes(value, &mut cfg.tweak_bytes)),
+			"xbytes" => cfg.extra_bytes = try!(read_byte(value)),
+			"ext-props" => try!(read_bytes(value, &mut cfg.prop_bytes)),
+			"dys-opts" => try!(read_bytes(value, &mut cfg.dys_option_bytes)),
+			"ext-clip" => try!(read_bytes(value, &mut cfg.clipping)),
+			"name" => got_name = Some(String::from(value)),
+			"description" => got_desc = Some(String::from(value)),
+			"desc-set" => cfg.desc_set = Some(String::from(value)),
+			"name-set" => cfg.name_set = Some(String::from(value)),
 			"ext-prop-def" | "m16d" | "tilemap" => (),
 			_ => return Err(CfgErr { explain: format!("bad field name: \"{}\"", name) }),
 		};
-	};
+	}
 
 	if let Some(s) = got_name {
 		cfg.name = s;
@@ -286,26 +310,26 @@ fn parse_oldstyle(path: &Path, gen: Genus, id: u16, buf: &str) -> Result<SpriteC
 		if let Some(s) = it.next() {
 			*output_byte = try!(read_byte(s));
 		} else {
-			return Err(CfgErr{ explain: String::from("Old-style CFG too short") });
+			return Err(CfgErr { explain: String::from("Old-style CFG too short") });
 		}
-	};
+	}
 
 	let (name, name_set) = default_name(path, gen, id);
 	let (desc, desc_set) = (name.clone(), name_set.clone());
 
 	if let Some(s) = it.next() {
 		Ok(SpriteCfg {
-			genus:       gen,
-			id:          id,
-			acts_like:   d[0],
+			genus: gen,
+			id: id,
+			acts_like: d[0],
 			tweak_bytes: [d[1], d[2], d[3], d[4], d[5], d[6]],
-			prop_bytes:  [d[7], d[8]],
+			prop_bytes: [d[7], d[8]],
 			source_path: path.with_file_name(s),
-			name:        name,
-			name_set:    Some(name_set),
-			desc:        desc,
-			desc_set:    Some(desc_set),
-			.. SpriteCfg::new()
+			name: name,
+			name_set: Some(name_set),
+			desc: desc,
+			desc_set: Some(desc_set),
+			..SpriteCfg::new()
 		})
 	} else {
 		Err(CfgErr { explain: String::from("Old-style CFG too short") })
@@ -323,22 +347,29 @@ fn read_byte(s: &str) -> Result<u8, CfgErr> {
 			n += v;
 			read = true;
 		} else {
-			return Err(CfgErr { explain: String::from("Non-byte data in byte field") })
+			return Err(CfgErr { explain: String::from("Non-byte data in byte field") });
 		}
 	}
 
-	if !read { Err(CfgErr { explain: String::from("Expected a byte, found nothing") }) } else { Ok(n as u8) }
+	if !read {
+		Err(CfgErr { explain: String::from("Expected a byte, found nothing") })
+	} else {
+		Ok(n as u8)
+	}
 }
 
 fn read_bytes(s: &str, buf: &mut [u8]) -> Result<(), CfgErr> {
 	let mut bytes = Vec::<u8>::with_capacity(buf.len());
 	for b in s.split_whitespace() {
 		bytes.push(try!(read_byte(b)));
-	};
+	}
 
 	if bytes.len() != buf.len() {
-		Err(CfgErr { explain: format!("Wrong length byte sequence: expected {} bytes, got {}",
-		                              buf.len(), bytes.len()) })
+		Err(CfgErr {
+			explain: format!("Wrong length byte sequence: expected {} bytes, got {}",
+			                 buf.len(),
+			                 bytes.len()),
+		})
 	} else {
 		for (i, b) in bytes.iter().enumerate() {
 			buf[i] = *b;
@@ -347,8 +378,12 @@ fn read_bytes(s: &str, buf: &mut [u8]) -> Result<(), CfgErr> {
 	}
 }
 
-fn tag_ending_s(ch: char) -> bool { ch == ' ' || ch == ':' }
-fn line_ending_s(ch: char) -> bool { ch == '\r' || ch == '\n' }
+fn tag_ending_s(ch: char) -> bool {
+	ch == ' ' || ch == ':'
+}
+fn line_ending_s(ch: char) -> bool {
+	ch == '\r' || ch == '\n'
+}
 
 named!(cfg_line(&str) -> (&str, &str),
   chain!(

@@ -1,12 +1,13 @@
-//extern crate libc;
-#[macro_use] extern crate nom;
+// extern crate libc;
+#[macro_use]
+extern crate nom;
 extern crate asar;
 extern crate rand;
 use std::collections::{HashSet, HashMap};
 use std::env;
 use std::io::prelude::*;
 use std::fs::{read_dir, File, OpenOptions};
-use std::path::{Path,PathBuf};
+use std::path::{Path, PathBuf};
 use rand::random;
 
 mod genus;
@@ -48,7 +49,7 @@ fn main() {
 
 	for flag in args.flags {
 		println!("ran with -{}", flag);
-	};
+	}
 
 	if !asar::init() {
 		error_exit!("No asar, why, what");
@@ -64,7 +65,7 @@ fn main() {
 		Err(e) => {
 			println!("Couldn't open ROM ({}): {}", rom_path.display(), e);
 			return;
-		},
+		}
 	};
 
 	let mut insert_list = match File::open(&list_path) {
@@ -72,7 +73,7 @@ fn main() {
 		Err(e) => {
 			println!("Couldn't open insert list ({}): {}", list_path.display(), e);
 			return;
-		},
+		}
 	};
 
 	let mut list_buf = String::new();
@@ -81,13 +82,18 @@ fn main() {
 
 	let space_freed = free_tool_space(&mut rom);
 
-	println!("Freed {} kilobytes of space from previous runs.", space_freed / 1024);
+	println!("Freed {} kilobytes of space from previous runs.",
+	         space_freed / 1024);
 
 	let patch_dir = base_dir.join("patch");
 
-	if let Err((es,ws)) = patch_subroutines(&mut rom, &patch_dir, &base_dir) {
-		for e in es { println!("SUB: {}", e); };
-		for w in ws { println!("SUB: {}", w); };
+	if let Err((es, ws)) = patch_subroutines(&mut rom, &patch_dir, &base_dir) {
+		for e in es {
+			println!("SUB: {}", e);
+		}
+		for w in ws {
+			println!("SUB: {}", w);
+		}
 		return;
 	};
 	println!("Inserted subroutines");
@@ -95,18 +101,24 @@ fn main() {
 	let patch_path = patch_dir.join("daiyousei.asm");
 	match asar::patch(&patch_path, &mut rom) {
 		Ok((_, warns)) => {
-			for warn in warns { println!("Warning: {}", warn) };
-		},
+			for warn in warns {
+				println!("Warning: {}", warn)
+			}
+		}
 		Err((errors, warns)) => {
-			for error in errors { println!("{}", error) };
-			for warn in warns { println!("{}", warn) };
+			for error in errors {
+				println!("{}", error)
+			}
+			for warn in warns {
+				println!("{}", warn)
+			}
 			return;
-		},
+		}
 	};
 
 	for line in asar::prints() {
 		println!("Main patch: {}", line);
-	};
+	}
 
 	let dys_data = get_tables().unwrap();
 	copy_sprite_settings(&mut rom, dys_data.option_bytes);
@@ -117,8 +129,12 @@ fn main() {
 
 	if let Err((errs, warns)) = insert_sprites(&mut rom, &cfgs, &patch_dir, &dys_data, verbose) {
 		println!("==== Insertion was stopped by an error ====");
-		for err in errs { println!("Error: {}", err); };
-		for warn in warns { println!("Warning: {}", warn); };
+		for err in errs {
+			println!("Error: {}", err);
+		}
+		for warn in warns {
+			println!("Warning: {}", warn);
+		}
 		return;
 	};
 
@@ -175,8 +191,9 @@ fn parse_args(argv: env::Args) -> Result<CmdArgs, String> {
 	}
 }
 
-fn get_cfgs(insert_list: insertlist::InsertList, base_dir: &PathBuf)
--> Result<Vec<SpriteCfg>, String> {
+fn get_cfgs(insert_list: insertlist::InsertList,
+            base_dir: &PathBuf)
+            -> Result<Vec<SpriteCfg>, String> {
 	let mut cfgs = Vec::<SpriteCfg>::new();
 
 	for (gen, sprites) in insert_list {
@@ -198,10 +215,10 @@ fn get_cfgs(insert_list: insertlist::InsertList, base_dir: &PathBuf)
 
 			match SpriteCfg::parse(&full_path, gen, id as u16, &cfg_buf) {
 				Ok(cfg) => cfgs.push(cfg),
-				Err(e)  => return Err(format!("{}: {:?}", full_path.display(), e)),
+				Err(e) => return Err(format!("{}: {:?}", full_path.display(), e)),
 			}
-		};
-	};
+		}
+	}
 
 	Ok(cfgs)
 }
@@ -228,10 +245,11 @@ fn patch_subroutines(rom: &mut RomBuf, patch_dir: &Path, base_dir: &Path) -> asa
 	for print in asar::prints() {
 		ptrf.write_all(print.as_bytes()).unwrap();
 		ptrf.write_all(b"\r\n").unwrap();
-	};
+	}
 	ptrf.sync_all().unwrap();
 
-	let mut usrf = match OpenOptions::new().write(true)
+	let mut usrf = match OpenOptions::new()
+		.write(true)
 		.truncate(true)
 		.create(true)
 		.open(&usrf_path) {
@@ -248,23 +266,25 @@ fn patch_subroutines(rom: &mut RomBuf, patch_dir: &Path, base_dir: &Path) -> asa
 			let p = entry.unwrap().path();
 			if p.extension() == Some(&std::ffi::OsString::from("asm")) {
 				println!("Subroutines in [{}] [DYS_AUTOSPACE_{:08X}]",
-					p.to_string_lossy(), namespace_id);
+				         p.to_string_lossy(),
+				         namespace_id);
 				let mut f = File::open(p).unwrap();
 				let mut usr_buf = Vec::new();
 				f.read_to_end(&mut usr_buf).unwrap();
-				usrf.write_all(format!("\r\nnamespace DYS_AUTOSPACE_{:08X}\r\n",
-					namespace_id).as_bytes()).unwrap();
+				usrf.write_all(format!("\r\nnamespace DYS_AUTOSPACE_{:08X}\r\n", namespace_id)
+						.as_bytes())
+					.unwrap();
 				usrf.write_all(&usr_buf).unwrap();
 				namespace_id += 1;
 			};
-		};
+		}
 
 		try!(asar::patch(&usrf_path, rom));
 
 		for print in asar::prints() {
 			ptrf.write_all(print.as_bytes()).unwrap();
 			ptrf.write_all(b"\r\n").unwrap();
-		};
+		}
 
 		ptrf.sync_all().unwrap();
 	};
@@ -272,9 +292,12 @@ fn patch_subroutines(rom: &mut RomBuf, patch_dir: &Path, base_dir: &Path) -> asa
 	Ok(((), vec![]))
 }
 
-fn insert_sprites(rom: &mut RomBuf, cfgs: &[SpriteCfg], patch_dir: &Path, dys_data: &DysTables,
-verbose: bool)
--> asar::AResult<()> {
+fn insert_sprites(rom: &mut RomBuf,
+                  cfgs: &[SpriteCfg],
+                  patch_dir: &Path,
+                  dys_data: &DysTables,
+                  verbose: bool)
+                  -> asar::AResult<()> {
 	let mut routines = HashMap::<PathBuf, InsertPoint>::new();
 	let prelude = "incsrc \"sprite_prelude.asm\"\r\n";
 	let temploc = patch_dir.join("temp_sprite.asm");
@@ -284,13 +307,17 @@ verbose: bool)
 		let (ip, warns) = if routines.contains_key(src) {
 			let ip = *routines.get(src).unwrap();
 			println!("Inserting {} #{:03x} [{}] (repeat)",
-				cfg.genus.shortname(), cfg.id, src.to_string_lossy());
+			         cfg.genus.shortname(),
+			         cfg.id,
+			         src.to_string_lossy());
 			cfg.apply_cfg(rom, dys_data);
 			cfg.apply_offsets(rom, dys_data, ip);
 			(ip, vec![])
 		} else {
 			println!("Inserting {} #{:03x} [{}]",
-				cfg.genus.shortname(), cfg.id, src.to_string_lossy());
+			         cfg.genus.shortname(),
+			         cfg.id,
+			         src.to_string_lossy());
 			let (ip, warns) = try!(cfg.assemble(rom, prelude, src, &temploc));
 			cfg.apply_cfg(rom, dys_data);
 			cfg.apply_offsets(rom, dys_data, ip);
@@ -302,9 +329,9 @@ verbose: bool)
 			print!("\tMAIN: ${:06x}\n\tINIT: ${:06x}\n", ip.main, ip.init);
 			for warn in warns {
 				println!("\tWarning: {}", warn);
-			};
+			}
 		};
-	};
+	}
 
 	Ok(((), vec![]))
 }
@@ -314,18 +341,18 @@ fn get_tables() -> Result<DysTables, String> {
 		sprite_sizes: try!(possible_label("DYS_DATA_SPRITE_SIZES")),
 		storage_ptrs: try!(possible_label("DYS_DATA_STORAGE_PTRS")),
 		option_bytes: try!(possible_label("DYS_DATA_OPTION_BYTES")),
-		init_ptrs:    try!(possible_label("DYS_DATA_INIT_PTRS")),
-		main_ptrs:    try!(possible_label("DYS_DATA_MAIN_PTRS")),
-		cls_ptrs:     try!(possible_label("DYS_DATA_CLS_PTRS")),
-		xsp_ptrs:     try!(possible_label("DYS_DATA_XSP_PTRS")),
-		mxs_ptrs:     try!(possible_label("DYS_DATA_MXS_PTRS")),
+		init_ptrs: try!(possible_label("DYS_DATA_INIT_PTRS")),
+		main_ptrs: try!(possible_label("DYS_DATA_MAIN_PTRS")),
+		cls_ptrs: try!(possible_label("DYS_DATA_CLS_PTRS")),
+		xsp_ptrs: try!(possible_label("DYS_DATA_XSP_PTRS")),
+		mxs_ptrs: try!(possible_label("DYS_DATA_MXS_PTRS")),
 	})
 }
 
 fn possible_label(name: &str) -> Result<usize, String> {
 	match asar::label(name) {
 		Some(v) => Ok(v),
-		None    => Err(format!("Missing label: {}", name)),
+		None => Err(format!("Missing label: {}", name)),
 	}
 }
 
@@ -338,7 +365,7 @@ fn free_tool_space(rom: &mut RomBuf) -> usize {
 		if eq_str_bytes("STAR", &rom.buf[i..]) {
 			// the length restriction on this loop
 			// lets us know these won’t fail.
-			let len  = rom.get_word(rom.unmap(i + 4).unwrap()).unwrap();
+			let len = rom.get_word(rom.unmap(i + 4).unwrap()).unwrap();
 			let nlen = rom.get_word(rom.unmap(i + 6).unwrap()).unwrap();
 			if len == nlen ^ 0xffff {
 				let len = if len == 0 { 0x1_0000 } else { len + 1 };
@@ -348,9 +375,8 @@ fn free_tool_space(rom: &mut RomBuf) -> usize {
 					reverted_mdk = true;
 				}
 
-				if len > 3
-				&& eq_str_bytes("DYS", &rom.buf[i + 8..])
-				|| eq_str_bytes("MDK", &rom.buf[i + 8..]) {
+				if len > 3 && eq_str_bytes("DYS", &rom.buf[i + 8..]) ||
+				   eq_str_bytes("MDK", &rom.buf[i + 8..]) {
 					let addr = rom.unmap(i).unwrap();
 					rom.clear_bytes(addr, len + 8).unwrap();
 					cleared_bytes += len + 8;
@@ -370,26 +396,27 @@ fn free_tool_space(rom: &mut RomBuf) -> usize {
 }
 
 fn revert_mdk(rom: &mut RomBuf) {
-		rom.set_bytes(0x008127, &[0xbd, 0xc8, 0x14, 0xf0]).unwrap();
-		rom.set_bytes(0x008151, &[0xa9, 0xff, 0x9d, 0x1a, 0x16]).unwrap();
-		rom.set_bytes(0x008172, &[0xa9, 0x08, 0x9d, 0xc8, 0x14]).unwrap();
-		rom.set_bytes(0x0082b3, &[0xa7, 0x87]).unwrap();
-		rom.set_bytes(0x0085c3, &[0x9c, 0x91, 0x14, 0xb5, 0x9e]).unwrap();
-		rom.set_bytes(0x0087a7, &[0x22, 0x59, 0xda, 0x2]).unwrap();
-		rom.set_bytes(0x00c089, &[0xbd, 0xd4, 0x14, 0x9d, 0x7b,
-								  0x18, 0x29, 0x01, 0x9d, 0xd4, 0x14]).unwrap();
-		rom.set_bytes(0x00c4cb, &[0xc9, 0x21, 0xd0, 0x69]).unwrap();
-		rom.set_bytes(0x00c6d6, &[0xaa, 0xbd, 0x09, 0xc6]).unwrap();
-		rom.set_bytes(0x00d43e, &[0x9e, 0xc8, 0x14, 0x60]).unwrap();
-		rom.set_bytes(0x01a866, &[0xc9, 0xe7, 0x90, 0x22]).unwrap();
-		rom.set_bytes(0x01a94b, &[0x29, 0x0d, 0x9d, 0xe0, 0x14]).unwrap();
-		rom.set_bytes(0x01a963, &[0x29, 0x0d, 0x9d, 0xd4, 0x14]).unwrap();
-		rom.set_bytes(0x01a9a6, &[0xaa, 0xbf, 0x59, 0xf6, 0x07]).unwrap();
-		rom.set_bytes(0x01a9c9, &[0x22, 0xd2, 0xf7, 0x07]).unwrap();
-		rom.set_bytes(0x01aba0, &[0xa5, 0x04, 0x38, 0xe9, 0xc8]).unwrap();
-		rom.set_bytes(0x01affe, &[0xad, 0xb9, 0x18, 0xf0, 0x27]).unwrap();
-		rom.set_bytes(0x01b395, &[0xbc, 0xab, 0x17, 0xf0, 0x0a]).unwrap();
-		rom.set_bytes(0x07f785, &[0xa9, 0x01, 0x9d, 0xa0, 0x15]).unwrap();
+	rom.set_bytes(0x008127, &[0xbd, 0xc8, 0x14, 0xf0]).unwrap();
+	rom.set_bytes(0x008151, &[0xa9, 0xff, 0x9d, 0x1a, 0x16]).unwrap();
+	rom.set_bytes(0x008172, &[0xa9, 0x08, 0x9d, 0xc8, 0x14]).unwrap();
+	rom.set_bytes(0x0082b3, &[0xa7, 0x87]).unwrap();
+	rom.set_bytes(0x0085c3, &[0x9c, 0x91, 0x14, 0xb5, 0x9e]).unwrap();
+	rom.set_bytes(0x0087a7, &[0x22, 0x59, 0xda, 0x2]).unwrap();
+	rom.set_bytes(0x00c089,
+		           &[0xbd, 0xd4, 0x14, 0x9d, 0x7b, 0x18, 0x29, 0x01, 0x9d, 0xd4, 0x14])
+		.unwrap();
+	rom.set_bytes(0x00c4cb, &[0xc9, 0x21, 0xd0, 0x69]).unwrap();
+	rom.set_bytes(0x00c6d6, &[0xaa, 0xbd, 0x09, 0xc6]).unwrap();
+	rom.set_bytes(0x00d43e, &[0x9e, 0xc8, 0x14, 0x60]).unwrap();
+	rom.set_bytes(0x01a866, &[0xc9, 0xe7, 0x90, 0x22]).unwrap();
+	rom.set_bytes(0x01a94b, &[0x29, 0x0d, 0x9d, 0xe0, 0x14]).unwrap();
+	rom.set_bytes(0x01a963, &[0x29, 0x0d, 0x9d, 0xd4, 0x14]).unwrap();
+	rom.set_bytes(0x01a9a6, &[0xaa, 0xbf, 0x59, 0xf6, 0x07]).unwrap();
+	rom.set_bytes(0x01a9c9, &[0x22, 0xd2, 0xf7, 0x07]).unwrap();
+	rom.set_bytes(0x01aba0, &[0xa5, 0x04, 0x38, 0xe9, 0xc8]).unwrap();
+	rom.set_bytes(0x01affe, &[0xad, 0xb9, 0x18, 0xf0, 0x27]).unwrap();
+	rom.set_bytes(0x01b395, &[0xbc, 0xab, 0x17, 0xf0, 0x0a]).unwrap();
+	rom.set_bytes(0x07f785, &[0xa9, 0x01, 0x9d, 0xa0, 0x15]).unwrap();
 }
 
 fn eq_str_bytes(s: &str, bytes: &[u8]) -> bool {
@@ -401,19 +428,37 @@ fn copy_sprite_settings(rom: &mut RomBuf, table: usize) {
 
 	rom.clear_bytes(table, 0xc8 * 16).unwrap();
 
-	for i in 0 .. 0xc8 {
+	for i in 0..0xc8 {
 		rom.set_byte(table + i * 16 + 1, i as u8).unwrap();
 		// This looks ridiculous because it is.
-		for j in 0 .. 6 {
+		for j in 0..6 {
 			let b = rom.get_byte(orig_table + i + 0xc9 * j).unwrap();
 			rom.set_byte(table + i * 16 + 2 + j, b).unwrap();
 		}
 	}
 	// + 1 is to make it inclusive.
-	for i in 0x0c9 .. 0x0ca + 1 { rom.set_byte(table + i * 16, 3).unwrap(); } // shooters
-	for i in 0x0cb .. 0x0d9 + 1 { rom.set_byte(table + i * 16, 2).unwrap(); } // generators
-	for i in 0x0da .. 0x0e0 + 1 { rom.set_byte(table + i * 16, 4).unwrap(); } // r1s
-	for i in 0x0e1 .. 0x0e6 + 1 { rom.set_byte(table + i * 16, 4).unwrap(); } // cluster r1s
-	for i in 0x0e7 .. 0x0f5 + 1 { rom.set_byte(table + i * 16, 5).unwrap(); } // scroll clear
-	for i in 0x1e7 .. 0x1f5 + 1 { rom.set_byte(table + i * 16, 5).unwrap(); } // scroll set
+	// shooters
+	for i in 0x0c9..0x0ca + 1 {
+		rom.set_byte(table + i * 16, 3).unwrap();
+	}
+	// generators
+	for i in 0x0cb..0x0d9 + 1 {
+		rom.set_byte(table + i * 16, 2).unwrap();
+	}
+	// r1s
+	for i in 0x0da..0x0e0 + 1 {
+		rom.set_byte(table + i * 16, 4).unwrap();
+	}
+	// cluster r1s
+	for i in 0x0e1..0x0e6 + 1 {
+		rom.set_byte(table + i * 16, 4).unwrap();
+	}
+	// scroll clear
+	for i in 0x0e7..0x0f5 + 1 {
+		rom.set_byte(table + i * 16, 5).unwrap();
+	}
+	// scroll set
+	for i in 0x1e7..0x1f5 + 1 {
+		rom.set_byte(table + i * 16, 5).unwrap();
+	}
 }

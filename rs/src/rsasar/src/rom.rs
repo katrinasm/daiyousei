@@ -8,37 +8,50 @@ use std::path::Path;
 
 #[derive(Debug)]
 pub enum MMap {
-	Lorom, Hirom, Sa1rom([u8; 4]), Sfxrom, Norom
+	Lorom,
+	Hirom,
+	Sa1rom([u8; 4]),
+	Sfxrom,
+	Norom,
 }
 
 impl fmt::Display for MMap {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match *self {
-			MMap::Lorom        => write!(f, "lorom"),
-			MMap::Hirom        => write!(f, "hirom"),
-			MMap::Sfxrom       => write!(f, "sfxrom"),
-			MMap::Norom        => write!(f, "sfxrom"),
-			MMap::Sa1rom(bnks) => write!(f, "sa1rom ${:02x}, ${:02x}, ${:02x}, ${:02x}",
-				bnks[0], bnks[1], bnks[2], bnks[3])
+			MMap::Lorom => write!(f, "lorom"),
+			MMap::Hirom => write!(f, "hirom"),
+			MMap::Sfxrom => write!(f, "sfxrom"),
+			MMap::Norom => write!(f, "sfxrom"),
+			MMap::Sa1rom(bnks) => {
+				write!(f,
+				       "sa1rom ${:02x}, ${:02x}, ${:02x}, ${:02x}",
+				       bnks[0],
+				       bnks[1],
+				       bnks[2],
+				       bnks[3])
+			}
 		}
 	}
 }
 
 #[derive(Debug)]
 pub struct InvalidAddressErr {
-	pub address:  usize,
+	pub address: usize,
 	pub mapper: MMap,
-	pub direction: AddressDir
+	pub direction: AddressDir,
 }
 
 #[derive(Debug)]
-pub enum AddressDir { ToSnes, ToPc }
+pub enum AddressDir {
+	ToSnes,
+	ToPc,
+}
 
 pub struct RomBuf {
 	pub buf: Vec<u8>,
 	pub size: usize,
 	header: usize,
-	mapper: MMap
+	mapper: MMap,
 }
 
 impl RomBuf {
@@ -76,17 +89,17 @@ impl RomBuf {
 
 	pub fn into_file(&self, path: &Path) -> Option<io::Error> {
 		let mut f = match OpenOptions::new()
-				.read(true)
-				.write(true)
-				.create(true)
-				.open(path) {
+			.read(true)
+			.write(true)
+			.create(true)
+			.open(path) {
 			Ok(f) => f,
-			Err(e) => return Some(e)
+			Err(e) => return Some(e),
 		};
 
 		if let Err(e) = f.seek(io::SeekFrom::Start(self.header as u64)) {
 			Some(e)
-		} else if let Err(e) = f.write_all(&self.buf[.. self.size]) {
+		} else if let Err(e) = f.write_all(&self.buf[..self.size]) {
 			Some(e)
 		} else {
 			None
@@ -98,7 +111,7 @@ impl RomBuf {
 			MMap::Lorom => Ok(((addr & 0x7f_0000) >> 1) | (addr & 0x7fff)),
 			MMap::Hirom => Ok(addr & 0x3f_ffff),
 			MMap::Norom => Ok(addr),
-			_ => unimplemented!()
+			_ => unimplemented!(),
 		}
 	}
 
@@ -107,7 +120,7 @@ impl RomBuf {
 			MMap::Lorom => Ok(((ofs & 0x3f_8000) << 1) | (ofs & 0x7fff) | 0x80_8000),
 			MMap::Hirom => Ok(ofs & 0x3f_ffff | 0xc0_0000),
 			MMap::Norom => Ok(ofs),
-			_ => unimplemented!()
+			_ => unimplemented!(),
 		}
 	}
 
@@ -115,8 +128,8 @@ impl RomBuf {
 		let ofs = try!(self.map(addr));
 		try!(self.map(addr + 2));
 		self.buf[ofs] = (value & 0xff) as u8;
-		self.buf[ofs+1] = (value >> 8 & 0xff) as u8;
-		self.buf[ofs+2] = (value >> 16 & 0xff) as u8;
+		self.buf[ofs + 1] = (value >> 8 & 0xff) as u8;
+		self.buf[ofs + 2] = (value >> 16 & 0xff) as u8;
 		Ok(())
 	}
 
@@ -137,12 +150,12 @@ impl RomBuf {
 		let ofs = try!(self.map(addr));
 		let end = try!(self.map(addr + values.len()));
 
-		Ok(self.buf[ofs .. end].clone_from_slice(values))
+		Ok(self.buf[ofs..end].clone_from_slice(values))
 	}
 
 	pub fn clear_bytes(&mut self, addr: usize, len: usize) -> Result<(), InvalidAddressErr> {
 		let ofs = try!(self.map(addr));
-		for i in 0 .. len {
+		for i in 0..len {
 			self.buf[ofs + i] = 0;
 		}
 		Ok(())
@@ -151,16 +164,14 @@ impl RomBuf {
 	pub fn get_long(&self, addr: usize) -> Result<usize, InvalidAddressErr> {
 		let ofs = try!(self.map(addr));
 		try!(self.map(addr + 2));
-		Ok(self.buf[ofs] as usize
-		   | ((self.buf[ofs + 1] as usize) << 8)
-		   | ((self.buf[ofs + 2] as usize) << 16))
+		Ok(self.buf[ofs] as usize | ((self.buf[ofs + 1] as usize) << 8) |
+		   ((self.buf[ofs + 2] as usize) << 16))
 	}
 
 	pub fn get_word(&self, addr: usize) -> Result<usize, InvalidAddressErr> {
 		let ofs = try!(self.map(addr));
 		try!(self.map(addr + 1));
-		Ok(self.buf[ofs] as usize
-		   | ((self.buf[ofs + 1] as usize) << 8))
+		Ok(self.buf[ofs] as usize | ((self.buf[ofs + 1] as usize) << 8))
 	}
 
 	pub fn get_byte(&self, addr: usize) -> Result<u8, InvalidAddressErr> {

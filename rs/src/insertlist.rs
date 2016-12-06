@@ -1,7 +1,7 @@
 use nom::*;
-use parse_aux::{dys_prefix};
+use parse_aux::dys_prefix;
 use std::collections::HashMap;
-use std::path::{Path,PathBuf};
+use std::path::{Path, PathBuf};
 use genus::*;
 
 pub type InsertList = HashMap<Genus, Vec<(u32, PathBuf)>>;
@@ -15,7 +15,7 @@ pub fn parse_list(list: &str) -> Result<InsertList, String> {
 		}
 	} else {
 		parse_oldstyle(list)
-		//Err(String::from("That isn't real"))
+		// Err(String::from("That isn't real"))
 	}
 }
 
@@ -43,7 +43,7 @@ fn parse_newstyle(list: &str) -> Result<HashMap<Genus, Vec<(u32, PathBuf)>>, Str
 		} else {
 			return Err(format!("cannot start a command with '{}'", first));
 		};
-	};
+	}
 
 	Ok(hm)
 }
@@ -51,7 +51,7 @@ fn parse_newstyle(list: &str) -> Result<HashMap<Genus, Vec<(u32, PathBuf)>>, Str
 fn sprite_line(line: &str) -> Result<(u32, PathBuf), String> {
 	let mut parts = line.splitn(2, char::is_whitespace);
 	let (num_s, path_s) = match (parts.next(), parts.next()) {
-		(Some(s0), Some(s1)) => (s0,s1),
+		(Some(s0), Some(s1)) => (s0, s1),
 		_ => return Err(String::from("# needs a sprite number and path")),
 	};
 
