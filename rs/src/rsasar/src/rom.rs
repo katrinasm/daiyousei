@@ -74,23 +74,15 @@ impl RomBuf {
 		return Ok(rom);
 	}
 
-	pub fn into_file(&self, path: &Path) -> Option<io::Error> {
-		let mut f = match OpenOptions::new()
+	pub fn into_file(&self, path: &Path) -> io::Result<()> {
+		let mut f = try!(OpenOptions::new()
 				.read(true)
 				.write(true)
 				.create(true)
-				.open(path) {
-			Ok(f) => f,
-			Err(e) => return Some(e)
-		};
+				.open(path));
 
-		if let Err(e) = f.seek(io::SeekFrom::Start(self.header as u64)) {
-			Some(e)
-		} else if let Err(e) = f.write_all(&self.buf[.. self.size]) {
-			Some(e)
-		} else {
-			None
-		}
+		try!(f.seek(io::SeekFrom::Start(self.header as u64)));
+		f.write_all(&self.buf[.. self.size])
 	}
 
 	pub fn map(&self, addr: usize) -> Result<usize, InvalidAddressErr> {
