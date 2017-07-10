@@ -2,11 +2,11 @@
 ;=============================================================================;
 ; Sprite constant values.                                                     ;
 ;=============================================================================;
-	!dys_maxActive       = 12      ; SCRIPT_NONPTR
-	!dys_maxLevel        = 128     ; SCRIPT_NONPTR
-	!dys_maxCls          = 20      ; SCRIPT_NONPTR
+	!dys_maxActive       = 12
+	!dys_maxLevel        = 255
+	!dys_maxCls          = 20
 
-	!dys_firstOam        = $30     ; SCRIPT_NONPTR
+	!dys_firstOam        = $30
 
 ;=============================================================================;
 ; Sprite table locations.                                                     ;
@@ -75,42 +75,42 @@
 
 	; The following defines refer to ram not used in the original SMW.
 	; These ones are established traditions from the old spritetools.
-	!spr_extraBit        = $7fab10
-	!spr_type            = $7fab1c
-	!spr_xProps1         = $7fab28
-	!spr_xProps2         = $7fab34
-	!spr_custNum         = $7fab9e ; Is the 9e bit on purpose? I bet.
+	!spr_extraBit        = $7ee000
+	!spr_type            = $7ee00c
+	!spr_xProps1         = $7ee018
+	!spr_xProps2         = $7ee024
+	!spr_custNum         = $7ee030 ; Is the 9e bit on purpose? I bet.
 
 	; These ones are inherited from Tessera.
 	; More Tessera code may be supported in the future,
 	; so I guess don't put too much stuff right next to these.
-	!spr_xByte1          = $7fab40
-	!spr_xByte2          = $7fab4c
-	!spr_xByte3          = $7fab58
-	!spr_xByte4          = $7fab64
+	!spr_xByte1          = $7ee03c
+	!spr_xByte2          = $7ee048
+	!spr_xByte3          = $7ee054
+	!spr_xByte4          = $7ee060
 
 	; These ones are new in Daiyousei.
-	!spr_xClipL          = $7fabaa
-	!spr_xClipT          = $7fabb6
-	!spr_xClipW          = $7fabc2
-	!spr_xClipH          = $7fabce
+	!spr_xClipL          = $7ee06c
+	!spr_xClipT          = $7ee078
+	!spr_xClipW          = $7ee084
+	!spr_xClipH          = $7ee090
 
-	!spr_xOpts1          = $7fac40
-	!spr_xOpts2          = $7fac4c
+	!spr_xOpts1          = $7ee09c
+	!spr_xOpts2          = $7ee0a4
 
 ;=============================================================================;
 ; Generator data locations.                                                   ;
 ;=============================================================================;
 
 	!gen_id              = $18b9
-	!gen_posXY           = $7facc0
-	!gen_xProps1         = $7facc1
-	!gen_xProps2         = $7facc2
-	!gen_extraBits       = $7facc3
-	!gen_xByte1          = $7facc4
-	!gen_xByte2          = $7facc5
-	!gen_xByte3          = $7facc6
-	!gen_xByte4          = $7facc7
+	!gen_posXY           = $7ee0b0
+	!gen_xProps1         = $7ee0b1
+	!gen_xProps2         = $7ee0b2
+	!gen_extraBits       = $7ee0b3
+	!gen_xByte1          = $7ee0b4
+	!gen_xByte2          = $7ee0b5
+	!gen_xByte3          = $7ee0b6
+	!gen_xByte4          = $7ee0b7
 
 ;=============================================================================;
 ; Shooter table locations.                                                    ;
@@ -125,13 +125,13 @@
 	!sht_posXH           = $17a3
 	!sht_time            = $17ab
 	!sht_loadIndex       = $17b3
-	!sht_xByte1          = $7fac00
-	!sht_xByte2          = $7fac08
-	!sht_xByte3          = $7fac10
-	!sht_xByte4          = $7fac18
-	!sht_miscA           = $7fac20
-	!sht_miscB           = $7fac28
-	!sht_extraBits       = $7fac30
+	!sht_xByte1          = $7ee0c0
+	!sht_xByte2          = $7ee0c8
+	!sht_xByte3          = $7ee0d0
+	!sht_xByte4          = $7ee0d8
+	!sht_miscA           = $7ee0e0
+	!sht_miscB           = $7ee0e8
+	!sht_extraBits       = $7ee0f0
 
 ;=============================================================================;
 ; Cluster sprite data locations.                                              ;
@@ -189,7 +189,7 @@
 	!dys_slot            = $15e9
 	; These ones are mostly used internally.
 	!dys_sprLoadStatuses = $1938
-	!dys_lastOam         = $7fac38
-	!dys_lastLastOam     = $7fac39
+	!dys_lastOam         = $7ee0f8
+	!dys_lastLastOam     = $7ee0f9
 
-	!dys_oam0Index       = $7fac3a
+	!dys_oam0Index       = $7ee0fa

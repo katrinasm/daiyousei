@@ -40,13 +40,32 @@ else
 	!F = |0
 endif
 
+!opt_largeLevels ?= 0
+!opt_katysHack ?= 0
+
 incsrc "prelude/macros.asm"
 
 !opt_manySprites ?= 1
 
-if !opt_vitorSA1 == 0
-	incsrc "prelude/memory.asm"
+if !opt_largeLevels
+	!opt_manySprites = 1
+endif
+
+if !opt_largeLevels
+	incsrc "prelude/memory-ll.asm"
 else
-	incsrc "prelude/memory-vvsa1.asm"
+	if !opt_vitorSA1 == 0
+		incsrc "prelude/memory.asm"
+	else
+		incsrc "prelude/memory-vvsa1.asm"
+	endif
 endif
 incsrc "prelude/subroutine_ptrs.asm"
+
+if !opt_largeLevels
+	incsrc "prelude/ll_mem.asm"
+endif
+
+if !opt_katysHack
+	incsrc "prelude/kt_mem.asm"
+endif

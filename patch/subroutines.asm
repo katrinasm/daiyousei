@@ -176,12 +176,23 @@ Offscreen:
 .horizontal
 	; If y pos not in range (-$50 ... $1b0),
 	; we're off screen
+if !opt_katysHack == 0
 	lda !spr_posYH,x : xba : lda !spr_posYL,x
 	rep #$20
 	clc : adc #$0050
 	cmp #$0200
 	sep #$20
 	bpl .erase
+else
+	lda !spr_posYH,x : xba : lda !spr_posYL,x
+	rep #$20
+	clc : adc #$0050
+	sec : sbc $1c
+	bmi .erase
+	cmp #$0200
+	bpl .erase
+	sep #$20
+endif
 
 	; don't erase us if "process offscreen" set
 	; note that things can still go offscreen vertically.
@@ -209,6 +220,9 @@ Offscreen:
 	bpl .end
 
 .erase
+if !opt_katysHack
+	sep #$20
+endif
 	lda !spr_status,x
 	stz !spr_status,x
 	ldy !spr_loadStatIndex,x
@@ -303,7 +317,12 @@ pointSounds:
 	sta $02
 	jsr + : rtl
 +	jsl GetDrawInfo
-	lda $02 : sta !oam1_tile,y
+	if !opt_katysHack == 0
+		lda $02 : sta !oam1_tile,y
+	else
+		lda $02 : clc : adc !spr_miscZ,x : sta !oam1_tile,y
+	endif
+	
 	lda !spr_facing,x : lsr : ror : lsr : eor #$40
 	ora !spr_tileProps,x
 	ora $64
@@ -337,8 +356,13 @@ pointSounds:
 	clc : adc #$10
 	sta !oam1_ofsX+4,y
 	lda $01 : sta !oam1_ofsY,y : sta !oam1_ofsY+4,y
-	lda $02 : sta !oam1_tile,y
-	lda $03 : sta !oam1_tile+4,y
+	if !opt_katysHack == 0
+		lda $02 : sta !oam1_tile,y
+		lda $03 : sta !oam1_tile+4,y
+	else
+		lda $02 : clc : adc !spr_miscZ,x : sta !oam1_tile,y
+		lda $03 : clc : adc !spr_miscZ,x : sta !oam1_tile+4,y
+	endif
 	ldy #$02
 	lda #$01
 	jsl FinishOamWrite
@@ -362,8 +386,13 @@ pointSounds:
 	lda $00 : sta !oam1_ofsX,y : sta !oam1_ofsX+4,y
 	lda $01 : sta !oam1_ofsY+4,y
 	sec : sbc #$10 : sta !oam1_ofsY,y
-	lda $02 : sta !oam1_tile,y
-	lda $03 : sta !oam1_tile+4,y
+	if !opt_katysHack == 0
+		lda $02 : sta !oam1_tile,y
+		lda $03 : sta !oam1_tile+4,y
+	else
+		lda $02 : clc : adc !spr_miscZ,x : sta !oam1_tile,y
+		lda $03 : clc : adc !spr_miscZ,x : sta !oam1_tile+4,y
+	endif
 	ldy #$02
 	lda #$01
 	jsl FinishOamWrite
@@ -401,10 +430,17 @@ pointSounds:
 	sec : sbc #$10
 	sta !oam1_ofsY,y : sta !oam1_ofsY+4,y
 
-	lda $02 : sta !oam1_tile,y
-	lda $03 : sta !oam1_tile+4,y
-	lda $04 : sta !oam1_tile+8,y
-	lda $05 : sta !oam1_tile+12,y
+	if !opt_katysHack == 0
+		lda $02 : sta !oam1_tile,y
+		lda $03 : sta !oam1_tile+4,y
+		lda $04 : sta !oam1_tile+8,y
+		lda $05 : sta !oam1_tile+12,y
+	else
+		lda $02 : clc : adc !spr_miscZ,x : sta !oam1_tile,y
+		lda $03 : clc : adc !spr_miscZ,x : sta !oam1_tile+4,y
+		lda $04 : clc : adc !spr_miscZ,x : sta !oam1_tile+8,y
+		lda $05 : clc : adc !spr_miscZ,x : sta !oam1_tile+12,y
+	endif
 	ldy #$02
 	lda #$03
 	jsl FinishOamWrite
@@ -422,6 +458,10 @@ pointSounds:
 +	jsl GetDrawInfo
 
 	phx
+	
+	if !opt_katysHack
+		lda !spr_miscZ,x : pha
+	endif
 
 	; $00 = sprite pos y - screen pos y
 	lda !spr_posYH,x : xba : lda !spr_posYL,x
@@ -463,7 +503,12 @@ pointSounds:
 ; $0c-0d - negation for x-offset
 ; $0e-0f - oam sizes ptr
 	lda $0001,y : cmp #$ff : beq .end
-	sta.b !oam1_tile,x
+	if !opt_katysHack == 0
+		sta.b !oam1_tile,x
+	else
+		clc : adc $01,s
+		sta.b !oam1_tile,x
+	endif
 
 	stz $03
 	lda $0004,y : bpl + : dec $03 : + : sta $02
@@ -500,6 +545,9 @@ pointSounds:
 
 .end
 	sep #$30
+	if !opt_katysHack
+		pla
+	endif
 	lda $0e : sec : sbc.b #!oam1_sizes : asl #2 : sta !dys_lastOam
 	plx
 	sta !spr_oamIndex,x
@@ -517,6 +565,11 @@ pointSounds:
 +	jsl GetDrawInfo
 	phx
 
+	if !opt_katysHack
+		lda #$00 : pha
+		lda !spr_miscZ,x : pha
+	endif
+	
 	lda $00 : sta $02
 	lda !spr_facing,x : lsr : ror : lsr : eor #$40 : ora $64 : sta $05
 	stz $0c
@@ -553,13 +606,22 @@ pointSounds:
 	lda $0004,y : eor $0c : adc ($06) : sta.b !oam1_ofsX,x
 	lda $0005,y : clc : adc $01 : sta.b !oam1_ofsY,x
 	rep #$21
-	lda $0002,y : eor $04 : sta.b !oam1_tile,x
+	if !opt_katysHack == 0
+		lda $0002,y : eor $04 : sta.b !oam1_tile,x
+	else
+		lda $0002,y : eor $04
+		adc $01,s
+		sta.b !oam1_tile,x
+	endif
 	txa : adc #$0004 : tax
 	tya : adc #$0005 : tay
 	sep #$20
 	inc $08
 	bra .loop
 .end
+	if !opt_katysHack
+		pla
+	endif
 	sep #$31
 	plx
 	lda $08 : sbc $0e

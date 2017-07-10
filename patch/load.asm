@@ -81,6 +81,7 @@ pushpc
 	endif
 pullpc
 
+if !opt_largeLevels == 0
 ; The format of the sprite list in ROM is as follows (highest byte first):
 ;   offset |     + 2      + 1      + 0
 ;  ------- | ----~~~~ ----~~~~ ----~~~~
@@ -512,5 +513,317 @@ LoadPosition:
 
 loadOfs:
 dw	-$30, 0, $120
+
+else
+;       +3       +2       +1       +0
+; ----~~~~ ----~~~~ ----~~~~ ----~~~~
+; xxxxAAAA yyyyAAAA nnnnnnnn T--nneL-
+; where nnnnnnnnnn = sprite number
+;                e = extra bit
+;             xxxx = x position of sprite in screen
+;             yyyy = y position of sprite in screen
+;         AAAAAAAA = first extra byte
+;                T = termination marker
+;                L = length. If set, 4 further bytes follow
+; the L extension is just the remaining 3 extra bytes
+; and a mandatory $00 byte for alignment
+
+; $00-$03 used by subroutines
+; $08-$09 screendex index
+; $0a     screen x position high byte
+; $0b     screen y position high byte
+; $0c-$0d sprite load index
+; $0e-$0f load line (note that the X/Y direction changes)
+LoadSprites:
+; print "LOAD ROUTINE: ", pc
+	phb : php
+
+	lda $d0 : pha : plb
+
+	rep #$30
+
+.hScroll:
+	lda $55 : and #$00ff : asl : tax
+	lda $1a : and #$fff0
+	adc.l .scrollOfs,x
+	bmi .vScroll
+	cmp #$2000 : bcs .vScroll
+	sta $0e
+
+.hScreens:
+	lda $0e : and #$1f00 : xba : sta $06 : sta $0a
+	lda $1c : and #$fff0 : sec : sbc #$0080
+	bpl + : lda #$0000 : +
+..topScreen:
+	sta $01
+	and #$1f00
+	tsb $0a
+	lsr #3 : ora $06
+	sta $08
+	;lda $01 : bit #$00f0 : beq ..alignedScreens
+	;lda $08
+	jsr getScreenIndices
+	lda $0e : and #$f0 : sta $00
+	lda #$f0 : sta $02
+	jsr loadColumn
+
+..middleScreen:
+	inc $0b
+	rep #$21
+	lda $08
+	adc #$0020
+..aligned2:
+	jsr getScreenIndices
+	stz $01
+	jsr loadColumn
+
+..bottomScreen:
+	inc $0b
+	rep #$21
+	lda $08
+	adc #$0020
+	jsr getScreenIndices
+	stz $01
+	lda $1c : clc : adc #$70 : sta $02
+	jsr loadColumn
+	bra .vScroll
+
+..alignedScreens:
+	lda #$f0 : sta $02
+	and $0e : sta $00
+	stz $01
+	bra ..aligned2
+
+
+
+
+
+.vScroll:
+; print "vscroll: ", pc
+	rep #$20
+	ldx $fe
+	lda $1c
+	clc : adc.l .vScrollOfs,x
+	bmi .end
+	cmp #$2000 : bcs .end
+	and #$fff0
+	sta $0e
+
+.vScreens:
+	lda $1a : and #$fff0 : sec : sbc #$0080
+	bpl + : lda #$0000 : +
+	sta $01
+	and #$1f00 : xba : sta $06 : sta $0a
+	lda $0e : and #$1f00 : tsb $0a
+..leftScreen:
+	lsr #3 : ora $06
+	sta $08
+	jsr getScreenIndices
+	lda $0e : and #$f0 : sta $00
+	lda #$f0 : sta $02
+	jsr loadRow
+
+..middleScreen:
+	inc $0a
+	rep #$21
+	lda $08
+	inc
+	jsr getScreenIndices
+	stz $01
+	jsr loadRow
+
+..rightScreen:
+	inc $0a
+	rep #$21
+	lda $08
+	inc
+	jsr getScreenIndices
+	stz $01
+	lda $1a : clc : adc #$70 : sta $02
+	jsr loadRow
+
+.end:
+	plp : plb
+	rtl
+
+.scrollOfs:
+dw -$30, $0000, $120
+.vScrollOfs:
+dw -$30, $120
+
+; print "getScreenIndices: ", pc
+getScreenIndices:
+	tax
+	lda.l !lvl_screenDex,x
+	and #$007f : asl : adc $ce : tax
+	lda $0001,x
+	and #$00fe : asl : adc #$0101 : adc $ce : tay
+	lda #$0000
+	sep #$20
+	lda $0002,x
+	tax
+	rts
+
+; print "loadColumn ", pc
+loadColumn:
+	; $00   = col
+	; $01   = min row (incl.)
+	; $02   = max row (incl.)
+	; $01,s = load index
+	; y     = load index
+	; x     = sprite index
+	phy
+.loop:
+	lda $0000,y : bmi .end
+	lda $0003,y
+	and #$f0
+	cmp $00 : bne .nextSpr
+	lda $0002,y
+	and #$f0
+	inc
+	cmp $01 : bcc .nextSpr
+	dec
+	cmp $02 : bcs .nextSpr
+.onLine:
+	%OBX(lda, !dys_sprLoadStatuses) : bne .nextSpr
+	jsr loadSpr
+
+.nextSpr:
+	lda $0000,y
+	rep #$20
+	and #$0002
+	asl
+	adc #$0004
+	adc $01,s
+	sta $01,s
+	tay
+	sep #$20
+	inx
+	bra .loop
+
+.end:
+	pla : pla
+	rts
+
+; print "loadRow ", pc
+loadRow:
+	; $00   = row
+	; $01   = min col (incl.)
+	; $02   = max col (incl.)
+	; $01,s = load index
+	; y     = load index
+	; x     = sprite index
+	phy
+.loop:
+	lda $0000,y : bmi .end
+	lda $0002,y
+	and #$f0
+	cmp $00 : bne .nextSpr
+	lda $0003,y
+	and #$f0
+	inc
+	cmp $01 : bcc .nextSpr
+	dec
+	cmp $02 : bcs .nextSpr
+.onLine:
+	%OBX(lda, !dys_sprLoadStatuses) : bne .nextSpr
+	jsr loadSpr
+
+.nextSpr:
+	lda $0000,y
+	rep #$20
+	and #$0002
+	asl
+	adc #$0004
+	adc $01,s
+	sta $01,s
+	tay
+	sep #$20
+	inx
+	bra .loop
+
+.end:
+	pla : pla
+	rts
+
+loadSpr:
+	phx
+	lda $0000,y : and #$18 : lsr #3 : xba
+	lda $0001,y
+	rep #$20
+	asl #4
+	tax
+	sep #$20
+	lda.l DYS_DATA_OPTION_BYTES,x
+	cmp #$02 : bcc .standard
+	bne + : jmp .generator : +
+	brk #$00
+
+.standard:
+	ldx.w #!dys_maxActive-1
+.findSlot:
+	%OBX(lda, !spr_status) : beq .foundSlot
+	dex : bpl .findSlot
+	ldx.w #!dys_maxActive-1
+
+.foundSlot:
+	lda $0000,y : %OBX(sta, !spr_extraBit)
+	lda $0001,y : %OBX(sta, !spr_custNum)
+
+	jsl !ssr_InitTables
+
+	lda $0002,y : and #$f0 : %OBX(sta, !spr_posYL)
+	lda $0003,y : and #$f0 : %OBX(sta, !spr_posXL)
+	lda $0a : %OBX(sta, !spr_posXH)
+	lda $0b : %OBX(sta, !spr_posYH)
+
+	lda $0002,y : and #$0f : %OBX(sta, !spr_xByte1)
+	lda $0003,y : asl #4
+	%OBX(ora, !spr_xByte1)
+	%OBX(sta, !spr_xByte1)
+	lda $0000,y : bit #$02 : beq .noextension
+.getxb:
+	lda $0004,y : %OBX(sta, !spr_xByte2)
+	lda $0005,y : %OBX(sta, !spr_xByte3)
+	lda $0006,y : %OBX(sta, !spr_xByte4)
+.noextension:
+	lda $01,s : %OBX(sta, !spr_loadStatIndex)
+	lda #$01
+	%OBX(sta, !spr_status)
+	plx
+	%OBX(sta, !dys_sprLoadStatuses)
+.end:
+	rts
+
+.generator:
+;	print "generator: ", pc
+	lda $0000,y : and #$1c : %OB(sta, !gen_extraBits)
+	lda $0001,y : %OB(sta, !gen_id)
+
+	lda $0002,y : and #$0f : %OB(sta, !gen_xByte1)
+	lda $0003,y : asl #4
+	%OB(ora, !gen_xByte1)
+	%OB(sta, !gen_xByte1)
+
+	lda $0000,y : and #$02 : beq ..noext
+..ext:
+	lda $0004,y : %OB(sta, !gen_xByte2)
+	lda $0005,y : %OB(sta, !gen_xByte3)
+	lda $0006,y : %OB(sta, !gen_xByte4)
+	bra ..extdone
+..noext:
+	lda #$00
+	%OB(sta, !gen_xByte2)
+	%OB(sta, !gen_xByte3)
+	%OB(sta, !gen_xByte4)
+..extdone:
+
+	lda #$01
+	plx
+	%OBX(sta, !dys_sprLoadStatuses)
+
+	rts
+
+endif
 
 incsrc "sprite_settings.asm"

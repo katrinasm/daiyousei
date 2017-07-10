@@ -6,3 +6,5 @@
 !opt_noOriginals             = 0
 !opt_supportSpecialWorld     = 1
 !opt_lastSpecialLevel        = $49
+
+!opt_largeLevels             = 0
