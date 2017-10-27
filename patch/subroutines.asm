@@ -173,26 +173,32 @@ Offscreen:
 	sta $03
 	jsl IsOffscreen : beq .ret
 	phb : phk : plb
-.horizontal
+	
+	; large levels don't differ in vertical/horizontal
+	if !opt_largeLevels == 0
+		lda $5b : lsr : bcs .vertical
+	endif
+	
+.horizontal:
 	; If y pos not in range (-$50 ... $1b0),
 	; we're off screen
-if !opt_katysHack == 0
-	lda !spr_posYH,x : xba : lda !spr_posYL,x
-	rep #$20
-	clc : adc #$0050
-	cmp #$0200
-	sep #$20
-	bpl .erase
-else
-	lda !spr_posYH,x : xba : lda !spr_posYL,x
-	rep #$20
-	clc : adc #$0050
-	sec : sbc $1c
-	bmi .erase
-	cmp #$0200
-	bpl .erase
-	sep #$20
-endif
+	if !opt_largeLevels == 0
+		lda !spr_posYH,x : xba : lda !spr_posYL,x
+		rep #$20
+		clc : adc #$0050
+		cmp #$0200
+		sep #$20
+		bpl .erase
+	else
+		lda !spr_posYH,x : xba : lda !spr_posYL,x
+		rep #$20
+		clc : adc #$0050
+		sec : sbc $1c
+		bmi .erase
+		cmp #$0200
+		bpl .erase
+		sep #$20
+	endif
 
 	; don't erase us if "process offscreen" set
 	; note that things can still go offscreen vertically.
@@ -219,11 +225,11 @@ endif
 	sep #$20
 	bpl .end
 
-.erase
-if !opt_katysHack
-	sep #$20
-endif
-	lda !spr_status,x
+.erase:
+	if !opt_largeLevels
+		; one of the branches from the other if can get here with rep #$20
+		sep #$20
+	endif
 	stz !spr_status,x
 	ldy !spr_loadStatIndex,x
 	cpy #$ff : beq .end
@@ -236,16 +242,55 @@ endif
 		sta !dys_sprLoadStatuses,x
 		plx
 	endif
-.end
+.end:
 	plb
-.ret
+.ret:
 	rtl
 
-.horizBounds
+; large levels don't differ in vertical/horizontal
+if !opt_largeLevels == 0
+	.vertical:
+		; in a horizontal level, things with the "process offscreen" bit
+		; set can still go offscreen vertically.
+		; in a vertical level, there is no similar rule for horizontal stuff,
+		; so just let it live right away
+		lda !spr_props4,x : and #$04 : beq .end
+		
+		; only process on even frames
+		lda $13 : lsr : bcs .end
+		
+		; check if we are onscreen horizontally
+		lda !spr_posXL,x : cmp #$00
+		lda !spr_posXH,x : sbc #$00
+		cmp #$02
+		bcs .erase
+		
+		; check if we are onscreen vertically
+		
+		; get y-pos relative to screen
+		lda !spr_posYH,x : xba : lda !spr_posYL,x
+		rep #$20
+		sec : sbc $1c
+		
+		bmi .aboveScreen
+	.belowOrOnScreen:
+		; if we have a positive screen pos, make sure we are not too far below
+		cmp #$0140 : bcc .vEnd
+		bcs .erase
+	.aboveScreen:
+		; if we have a negative screen pos, make sure we are not too far above
+		cmp #$ffb0 : bcc .erase
+	.vEnd:
+		sep #$20
+		plb
+		rtl
+endif
+
+.horizBounds:
 ;      right   left
 	dw $0130, $ffc0,   $01a0, $ffc0,   $01a0, $fff0,   $0160, $ff90
 	dw $0130, $ffc0,   $01a0, $ff80,   $0040, $0160,   $0160, $ffb0
-.vertBounds
+.vertBounds:
 ;      below  above
 	dw $0140, $fec0
 
