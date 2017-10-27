@@ -46,10 +46,6 @@ fn main() {
 	let gen_ssc = args.flags.contains(&'d');
 	let gen_collection = args.flags.contains(&'c');
 
-	for flag in args.flags {
-		println!("ran with -{}", flag);
-	};
-
 	if !asar::init() {
 		error_exit!("No asar, why, what");
 	};
