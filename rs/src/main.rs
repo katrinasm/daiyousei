@@ -50,6 +50,10 @@ fn main() {
 		error_exit!("No asar, why, what");
 	};
 
+    if args.flags.contains(&'V') {
+        println!("Daiyousei version 0.4.1");
+    }
+    
 	let base_dir = PathBuf::new();
 
 	let rom_path = base_dir.join(&args.romname);
