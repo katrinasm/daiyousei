@@ -1,6 +1,6 @@
 [package]
 name = "daiyousei"
-version = "0.3.0"
+version = "0.4.1"
 authors = ["Katrina", "imamelia", "p4plus2"]
 
 [dependencies]
