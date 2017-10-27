@@ -153,6 +153,8 @@ macro __GET__DRAW__INLINE()
 +
 endmacro
 
+%dys_ssr(Offscreen_A) ; PIXI compatibility addition
+	and #$07 : asl : bra Offscreen
 %dys_ssr(Offscreen_X1)
 	lda #$02 : bra Offscreen
 %dys_ssr(Offscreen_X2)
