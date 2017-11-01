@@ -67,6 +67,14 @@ Practical subroutines
     If the sprite is offscreen, it will be despawned and its slot freed.
     The # in the routine goes from 0-7 and selects the size of the sprite.
     If you are unsure which version to use, use !ssr_Offscreen_X0.
+    
+- !ssr_Offscreen_A
+
+   Checks if the sprite is offscreen.
+   This is the same as !ssr_Offscreen_X#, but instead of using a hardcode
+   size selector, it uses the value in A to select the size.
+   This routine has few advantages over the \_X# version, and exists for
+   compatibility reasons. `!ssr_Offscreen_X#` is preferred.
 
 - !ssr_FindFreeSlot
 
