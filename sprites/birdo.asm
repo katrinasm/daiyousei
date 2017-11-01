@@ -168,7 +168,7 @@ SUB_HAMMER_THROW:
 	sta !spr_facing,x : sta !DP|!spr_miscA,y
 	ldx !dys_slot
 .ret
-	rtl
+	rts
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
