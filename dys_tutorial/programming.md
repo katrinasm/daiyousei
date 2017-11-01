@@ -236,10 +236,10 @@ Graphical subroutines
     Each frame consists of the following:
     - one byte: the width of the image in pixels
     - a series of four-byte tile descriptors, each as follows:
-    - tile number (cannot be $ff)
-    - tile properties (yxppccct)
-    - offset X (-128 .. 127)
-    - offset Y (-128 .. 127)
+       - tile number (cannot be $ff)
+       - tile properties (yxppccct)
+       - offset X (-128 .. 127)
+       - offset Y (-128 .. 127)
     - the byte $ff to mark the end of the frame.
 
 - !ssr_GenericGfx_FTableMTS
@@ -255,9 +255,9 @@ Graphical subroutines
     Each frame consists of the following:
     - one byte: the width of the image in pixels
     - a series of five-byte tile descriptors, each as follows:
-    - tile size ($00 for 8x8, $02 for 16x16)
-    - tile number (may be $ff)
-    - tile properties (yxppccct)
-    - offset X (-128 .. 127)
-    - offset Y (-128 .. 127)
+        - tile size ($00 for 8x8, $02 for 16x16)
+        - tile number (may be $ff)
+        - tile properties (yxppccct)
+        - offset X (-128 .. 127)
+        - offset Y (-128 .. 127)
     - the byte $ff to mark the end of the frame.
