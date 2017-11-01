@@ -71,7 +71,7 @@ Practical subroutines
 - !ssr_Offscreen_A
 
    Checks if the sprite is offscreen.
-   This is the same as !ssr_Offscreen_X#, but instead of using a hardcode
+   This is the same as !ssr_Offscreen_X#, but instead of using a hardcoded
    size selector, it uses the value in A to select the size.
    This routine has few advantages over the \_X# version, and exists for
    compatibility reasons. `!ssr_Offscreen_X#` is preferred.
