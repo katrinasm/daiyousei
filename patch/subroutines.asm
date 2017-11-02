@@ -81,7 +81,7 @@ START:
 	; if a != 0 (i.e. if we're offscreen), return
 	bne .invalid
 
-	lda !spr_props2,x : and #$20 : bne .noTopCheck
+	lda !spr_props2,x : and #$20 : beq .noTopCheck
 .topCheck
 	lda !spr_posYL,x : clc : adc #$1c
 	php
@@ -149,7 +149,7 @@ macro __GET__DRAW__INLINE()
 	rol : and #$01
 	sta !spr_offscreen,x
 	beq +
-	rtl
+	rts
 +
 endmacro
 
