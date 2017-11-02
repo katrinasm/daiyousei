@@ -10,14 +10,55 @@ pullpc
 FinishOamWriteUpdate:
 	sty $0b
 	sta $08
-	inc
-	asl #2
-	;clc : adc !dys_lastOam
-	clc : adc !spr_oamIndex,x
-	sta !dys_lastOam
+	
+	lda !spr_posYL,x
+	sec : sbc $1c
+	sta $00
+	lda !spr_posYH,x
+	sbc $1D
+	sta $01
 	ldy !spr_oamIndex,x
-	jml $01b7c2!F
-
+	lda !spr_posXH,x : xba : lda !spr_posXL,x
+	rep #$20
+	sec : sbc $1a
+	sta $02
+	tya : lsr #2 : tax
+	sep #$21
+	
+.loop	lda !oam1_ofsX,y
+	sbc $02
+	rep #$21
+	bpl +
+	ora #$ff00
++	adc $02 : cmp #$0100
+	txa
+	sep #$20
+	lda $0b
+	bpl +
+	lda !oam1_sizes,x
+	and #$02
++	adc #$00
+	sta !oam1_sizes,x
+	lda !oam1_ofsY,y
+	sec : sbc $00
+	rep #$21
+	bpl +
+	ora #$ff00
++	adc $00
+	clc : adc #$0010 : cmp #$0100
+	bcc +
+	lda #$00f0
+	sep #$20
+	sta !oam1_ofsY,y
++	sep #$21
+	iny #4
+	inx
+	dec $08
+	bpl .loop
+	tya
+	sta !dys_lastOam
+	jml $01b840!F	; org $01b840 : ldx !dys_slot : rts
+	
 SetOam:
 	lda !spr_status,x : beq .ret
 	lda !dys_lastOam
