@@ -53,11 +53,25 @@ fn main() {
     if args.flags.contains(&'V') {
         println!("Daiyousei version 0.4.1");
     }
-    
-	let base_dir = PathBuf::new();
 
-	let rom_path = base_dir.join(&args.romname);
-	let list_path = base_dir.join(&args.listname);
+    let base_dir = if args.flags.contains(&'g') {
+        if let Ok(mut p) = env::current_exe() {
+            p.pop();
+            p.push("daiyousei.d");
+            p
+        } else {
+            error_exit!("Couldn't find own executable path for -g");
+        }
+    } else if Path::is_dir(&PathBuf::from("daiyousei.d")) {
+        PathBuf::from("daiyousei.d")
+    } else {
+        PathBuf::new()
+    };
+
+    let user_dir = PathBuf::new();
+
+	let rom_path = user_dir.join(&args.romname);
+	let list_path = user_dir.join(&args.listname);
 
 	let mut rom = match RomBuf::from_file(&rom_path) {
 		Ok(rom) => rom,
@@ -84,6 +98,9 @@ fn main() {
 	println!("Freed {} kilobytes of space from previous runs.", space_freed / 1024);
 
 	let patch_dir = base_dir.join("patch");
+    if !Path::is_dir(&patch_dir) {
+        error_exit!(format!("Couldn't find patch folder (expected \"{}\")", patch_dir.to_string_lossy()));
+    };
 
 	if let Err((es,ws)) = patch_subroutines(&mut rom, &patch_dir, &base_dir) {
 		for e in es { println!("SUB: {}", e); };
@@ -123,7 +140,7 @@ fn main() {
 	};
 
 	print!("Writing rom ... ");
-	rom.into_file(&rom_path);
+	rom.into_file(&rom_path).unwrap();
 	println!("written!");
 
 	if gen_ssc {
@@ -208,6 +225,7 @@ fn get_cfgs(insert_list: insertlist::InsertList, base_dir: &PathBuf)
 
 fn patch_subroutines(rom: &mut RomBuf, patch_dir: &Path, base_dir: &Path) -> asar::AResult<()> {
 	let patch_path = patch_dir.join("subroutines.asm");
+    println!("{}", patch_path.to_string_lossy());
 	let usr_dir_path = base_dir.join("library");
 	let ptrf_path = patch_dir.join("prelude").join("subroutine_ptrs.asm");
 	let usrf_path = patch_dir.join("temp_subroutines.asm");
