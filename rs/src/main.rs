@@ -186,7 +186,7 @@ fn parse_args(argv: env::Args) -> Result<CmdArgs, String> {
 		}
 	}
 
-	if val.romname.is_empty() || val.listname.is_empty() {
+	if !val.flags.contains(&'V') && (val.romname.is_empty() || val.listname.is_empty()) {
 		Err("Need a rom and sprite list name!".to_string())
 	} else {
 		Ok(val)
