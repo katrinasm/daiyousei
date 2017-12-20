@@ -51,7 +51,8 @@ fn main() {
 	};
 
     if args.flags.contains(&'V') {
-        println!("Daiyousei version 0.4.1");
+        println!("Daiyousei version 0.4.2");
+        return;
     }
 
     let base_dir = if args.flags.contains(&'g') {
