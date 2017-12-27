@@ -66,6 +66,7 @@ def compile_zip(target, ver):
     for dir in optional_dirs:
         if os.path.isdir(dir):
             zipdir(dir, zip)
+    return True
 
 def zipdir(path, zip, exclude=[]):
     path = os.path.normpath(path)
@@ -80,7 +81,6 @@ def zipdir(path, zip, exclude=[]):
                     break
             if skip:
                 continue
-            print((srcfile, dstfile))
             zip.write(os.path.join(root, file), arcname=dstfile)
 
 if __name__ == '__main__':
