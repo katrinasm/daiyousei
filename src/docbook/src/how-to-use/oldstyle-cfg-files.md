@@ -1,0 +1,1 @@
+# Oldstyle cfg files
