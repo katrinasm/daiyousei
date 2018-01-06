@@ -414,7 +414,6 @@ SetScroll:
 	rts
 
 RunOnce:
-	print "R1s dispatch @ ", pc
 	phx : phy : phb
 	pei ($00) : pei ($02) : pei ($0e)
 	php
