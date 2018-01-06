@@ -1,6 +1,6 @@
 @include
-; These routines implement a few things that were in SMW’s load routine
-; as run-once sprites.
+; This file contains run-once sprite implementations of some special cases
+; that had been in SMW's load routine.
 
 RunOnceShell:
 	lda $00 : sec : sbc #$d6 : sta $00
