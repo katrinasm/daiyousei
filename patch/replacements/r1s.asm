@@ -13,8 +13,8 @@ RunOnceShell:
 	sta !spr_loadStatIndex,x
 	lda #$09 : sta !spr_status,x
 	lda $02 : sta !spr_posXL,x
-	lda $03 : sta !spr_posYL,x
-	lda $04 : sta !spr_posXH,x
+	lda $03 : sta !spr_posXH,x
+	lda $04 : sta !spr_posYL,x
 	lda $05 : sta !spr_posYH,x
 .ret
 	rtl
@@ -40,8 +40,8 @@ RunOnceTriplePlatform:
 	lda .anglesL,y : sta !spr_miscI,x
 	lda .anglesH,y : sta !spr_miscD,x
 	lda $02 : sta !spr_posXL,x
-	lda $03 : sta !spr_posYL,x
-	lda $04 : sta !spr_posXH,x
+	lda $03 : sta !spr_posXH,x
+	lda $04 : sta !spr_posYL,x
 	lda $05 : sta !spr_posYH,x
 	lda $0d : sta !spr_loadStatIndex,x
 	dec $0c
@@ -67,8 +67,8 @@ RunOnceFiveEeries:
 	tyx
 	ldy $0c
 	lda $02 : clc : adc .ofsXL,y : sta !spr_posXL,x
-	lda $04 : adc .ofsXH,y : sta !spr_posXH,x
-	lda $03 : sta !spr_posYL,x
+	lda $03 : adc .ofsXH,y : sta !spr_posXH,x
+	lda $04 : sta !spr_posYL,x
 	lda $05 : sta !spr_posYH,x
 	lda .miscA,y : sta !spr_miscA,x
 	lda $0d : sta !spr_loadStatIndex,x
@@ -145,8 +145,8 @@ RunOnceBooRingCCW:
 	beq +
 	ldy !WB|$18ba
 	lda $02 : sta $0fb2,y
-	lda $03 : sta $0fb6,y
-	lda $04 : sta $0fb4,y
+	lda $03 : sta $0fb4,y
+	lda $04 : sta $0fb6,y
 	lda $05 : sta $0fb8,y
 	lda #$00 : sta $0fba,y
 	lda $0d : sta $0fbc,y
@@ -170,7 +170,7 @@ RunOnceSwooperCeiling:
 	jsl !ssr_NewRand
 	adc $1a : sta !cls_posXL,x
 	lda $1b : adc #$00 : sta !cls_posXH,x
-	lda $03 : sta !cls_posYL,x
+	lda $04 : sta !cls_posYL,x
 	lda $05 : sta !cls_posYH,x
 	dex : bpl .loop
 	rtl

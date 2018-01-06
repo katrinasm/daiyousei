@@ -414,11 +414,11 @@ SetScroll:
 	rts
 
 RunOnce:
+	print "R1s dispatch @ ", pc
 	phx : phy : phb
 	pei ($00) : pei ($02) : pei ($0e)
 	php
 	lda $04 : sta $00
-	lsr $05
 
 	rep #$20
 	lda $04 : asl : adc $04 : tax
@@ -431,6 +431,10 @@ RunOnce:
 	ldx $08 : stx $04
 	jsr LoadExtraBytes
 	plx : stx $02
+
+	rep #$20
+	lda $03 : xba : sta $03
+	sep #$20
 
 	lda $0000,y : and #$0c : sta $01
 
