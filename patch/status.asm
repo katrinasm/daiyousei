@@ -39,7 +39,7 @@ pushpc
 		rts
 
 	org $01d43e
-		jsr $8133
+		jsr $812c
 		rtl
 pullpc
 

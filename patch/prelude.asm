@@ -51,6 +51,8 @@ if !opt_largeLevels
 	!opt_manySprites = 1
 endif
 
+!opt_cpuMeters ?= 0
+
 if !opt_largeLevels
 	incsrc "prelude/memory-ll.asm"
 else

@@ -2,7 +2,10 @@ pushpc
 	org $0180a4
 		jml SpriteMainPrep
 	org $0180d2
-		jml SetOam
+		lda !spr_status,x : bne + : rts : +
+		jsl SetOam
+		sta !spr_oamIndex,x
+		jmp $80e5
 	org $01b7bb
 		jml FinishOamWriteUpdate
 pullpc
@@ -10,7 +13,7 @@ pullpc
 FinishOamWriteUpdate:
 	sty $0b
 	sta $08
-	
+
 	lda !spr_posYL,x
 	sec : sbc $1c
 	sta $00
@@ -24,8 +27,9 @@ FinishOamWriteUpdate:
 	sta $02
 	tya : lsr #2 : tax
 	sep #$21
-	
-.loop	lda !oam1_ofsX,y
+
+.loop
+	lda !oam1_ofsX,y
 	sbc $02
 	rep #$21
 	bpl +
@@ -58,9 +62,8 @@ FinishOamWriteUpdate:
 	tya
 	sta !dys_lastOam
 	jml $01b840!F	; org $01b840 : ldx !dys_slot : rts
-	
+
 SetOam:
-	lda !spr_status,x : beq .ret
 	lda !dys_lastOam
 	cmp.b #!dys_firstOam : bcc .exhausted
 	cmp !dys_lastLastOam : beq .findFree
@@ -82,13 +85,10 @@ SetOam:
 	ldy.b #!dys_firstOam
 .found
 	tya
-	sta !spr_oamIndex,x
 	sta !dys_lastOam
 	sta !dys_lastLastOam
 .ret
-	jml $0180e5!F
-
-
+	rtl
 
 SpriteMainPrep:
 	stz !WB|$18df
@@ -98,8 +98,6 @@ SpriteMainPrep:
 	dec : sta !dys_lastLastOam
 	ldx.b #!dys_maxActive-1
 	jml $0180a9!F
-
-
 
 ;-----------------------------------------------------------------------------;
 ; Misc. fixes                                                                 ;
@@ -134,6 +132,28 @@ pushpc
 
 	org $01dfa9
 		jml BonusGameOamFix
+
+	org $02fd4a!F ; Boo ring boo: fetch
+		jsr ClusterOamShort
+
+	org $02fd98!F ; Boo ring boo: re-read
+		ldy !cls_miscB,x
+
+	org $02fccd!F ; cluster sprite OAM finisher
+		lda !cls_miscB,x
+	org $02fcd9!F ; cluster sprite OAM finisher
+		ldy !cls_miscB,x
+
+	org $02d51e!F
+	ClusterOamShort:
+		jml ClusterOamFetch
+
+	org $01ee65
+		jml YoshiOamFix
+
+	org $02db7d
+		jml HammerPlatOamFix
+
 pullpc
 
 CDoorOamFix:
@@ -170,4 +190,28 @@ BonusGameOamFix:
 	adc #$14
 	sta !dys_lastOam
 
-	jml $01dfad!F
+	rtl
+
+ClusterOamFetch:
+	; OAM index -> y
+	lda !dys_lastOam
+	tay
+	sta !cls_miscB,x ; table unused by original game
+	; mark 1 tile as used (even if the sprite might decide not to use it)
+	clc : adc #$04
+	sta !dys_lastOam
+	jml $02fdb7!F ; bank 2 RTS
+
+YoshiOamFix:
+	; Yoshi's graphics routine is often called before the frame starts
+	; it ends up being easiest to fix by giving Yoshi 2 slots ahead of the
+	; rest, that only Yoshi uses...
+	lda.b #!dys_firstOam-8 : sta !spr_oamIndex,x
+
+	ldy !spr_timeD,x : cpy #$08 ; hijack
+	jml $01ee6a!F
+
+HammerPlatOamFix:
+	lda !spr_oamIndex,x : clc : adc #$10 : sta !spr_oamIndex,y
+	lda !spr_posXL,x : sta !WB|!spr_posXL,y
+	jml $02db82!F

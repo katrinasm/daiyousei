@@ -71,11 +71,18 @@ LoadBytes:
 pushpc
 	if !opt_vitorSA1 == 0
 		org $02a802
+			if !opt_cpuMeters
+				lda #$08 : sta $2100
+			endif
 			jsl LoadSprites
 			sep #$30
+			if !opt_cpuMeters
+				lda #$0f : sta $2100
+			endif
 			rts
 	else
 		org $02a807
+			; we're already on the SA-1 here so no CPU meter is viable
 			pla : pla
 			jml LoadSprites
 	endif
@@ -156,24 +163,39 @@ LoadSprites:
 	lda $1b,x : sta $01
 	lda $55 : asl : tax
 	rep #$31
-	lda $00 : adc.l loadOfs,x : sta $00
+	lda $00 : adc.l loadOfs,x
+	; if load line overflows, assume line $00
+	; (the only direction it should overflow is positive->negative)
+	bpl + : lda #$0000 : +
+	sta $00
 	; Set up the adjusted load line ($0e)
 	xba : and #$000f : sta $0e
 	lda $00 : lsr #3 : and #$0200 : tsb $0e
 	; Initialize the sprite table offset
+	; if we're in the initial load, reset the memoized load line
+	cpx #$0002 : bne +
+	lda #$ffff : sta !dys_loadLineMemo
++
+	; if the memoized load line is on a screen <= ours, use the memo offset
+	lda $00 : and #$ff00 : cmp !dys_loadLineMemo : beq .useMemo : bcc .dontUseMemo
+.useMemo:
+	lda !dys_loadStatMemo : and #$00ff : sta $0c
+	lda !dys_loadOfsMemo : tay
+	bra .scrLoop
+.dontUseMemo:
 	stz $0c
 	ldy $ce
 	iny ; We need to skip a header byte.
 .scrLoop
 	; If we hit bit $ff (here checked kind of funny), we hit the end. return.
-	lda $0000,y : xba : cmp #$ff00 : bcs lsret
+	lda $0000,y : xba : cmp #$ff00 : bcs .lsret3
 	; When we hit a sprite with a >= screen number than the load line,
 	; we are to a point where we can start looking for sprites to load.
 	and #$020f : cmp $0e : bcs .sprLoopInit
 	; If we haven't got there yet, we need to dig up the sprite's number
 	; and extra bits, and then its size, to skip it.
 	sep #$20
-	lda $0c : cmp.b #!dys_maxLevel : beq lsret
+	lda $0c : cmp.b #!dys_maxLevel : beq .lsret3
 	inc : sta $0c
 	lda $0000,y : and #$08 : lsr #2 : xba
 	lda $0002,y
@@ -182,13 +204,23 @@ LoadSprites:
 	rep #$21
 	tya : adc $02 : tay
 	bra .scrLoop
+.lsret3
+	plp : plb : rtl
 
 .sprLoopInit
+	; set up the load line memo
+	lda $00 : and #$ff00 : cmp !dys_loadLineMemo : beq +
+	sta !dys_loadLineMemo
+	sep #$20
+	lda $0c : sta !dys_loadStatMemo
+	rep #$20
+	tya : sta !dys_loadOfsMemo
++
 	ldx $0c
 	; If the screen number was past the load line, it means there aren't
 	; any sprites on the same screen as it. Return immediately.
 .sprLoop
-	cpx.w #!dys_maxLevel : bcs lsret
+	cpx.w #!dys_maxLevel : bcs .lsret3
 	lda $0000,y : xba : and #$020f : cmp $0e : bne .lsret2
 	; Here we begin a possible real parse for our sprite.
 	sep #$20

@@ -6,16 +6,17 @@ pullpc
 
 CallCls:
 	phb
+	jsl SetOam ; see nstl.asm
 	ldx.b #!dys_maxCls-1
 .loop
 	lda !cls_id,x : beq +
 	stx !dys_slot
 	jsl .call
 +	dex : bpl .loop
-	
+
 	plb
 	rtl
-	
+
 ; This is a jsl so that when sprites rtl, it returns to the + above.
 .call
 	sta $00 : asl : clc : adc $00

@@ -193,3 +193,7 @@
 	!dys_lastLastOam     = $7ee0f9
 
 	!dys_oam0Index       = $7ee0fa
+
+	!dys_loadLineMemo    = $7ee0fb
+	!dys_loadOfsMemo     = $7ee0fd
+	!dys_loadStatMemo    = $7ee0ff

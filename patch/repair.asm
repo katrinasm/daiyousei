@@ -335,7 +335,8 @@ pushpc
 		%put_rtl($02b1b7) ; jumping fish generator
 		%put_rtl($02b206) ; super koopa generator
 		%put_rtl($02b259) ; bubble sprite generator
-		%put_rtl($02b2cf) ; dolphin generator
+		%put_rtl($02b287) ; dolphin generator (1)
+		%put_rtl($02b2cf) ; dolphin generator (2)
 		%put_rtl($02b31e) ; eerie generator
 		%put_rtl($02b386) ; para-sprite generator
 		%put_rtl($038489) ; grey falling platform
@@ -404,9 +405,15 @@ pushpc
 
 	org $01e7db!F
 		ldy.b #!dys_maxActive-1
+	org $028139!F
+		ldy.b #!dys_maxActive-1
 	org $02a0b8!F
 		ldx.b #!dys_maxActive-1
-	org $03c20b!F
+	org $02db64!F
+		ldy.b #!dys_maxActive-1
+	org $03c20b!F ; fix from an earlier version that erroneously overwrote this
+		sty !WB|$1df9
+	org $03c20f!F
 		ldy.b #!dys_maxActive-1
 	org $03c4e1!F
 		ldy.b #!dys_maxActive-1
@@ -436,6 +443,28 @@ pushpc
 ;----- sumo fire
 	%put_rtl($02f93b)
 	%put_rtl($02f93f)
+
+;-----------------------------------------------------------------------------;
+; Generators                                                                  ;
+;-----------------------------------------------------------------------------;
+;----- bullet bill generators ($0d6-$0d7, originally $0c-$0d)
+	org $02b0e4!F
+		ldy !WB|$18b9
+		lda $b0c9-$d6,y
+		ldx $b0cb-$d6,y
+;----- dolphin generators ($0cf-$0d0, originally $05-$06)
+	org $02b275!F
+		ldx $b268-$cf,y
+		lda $b26a-$cf,y
+	org $02b2ba!F
+		adc $b25e-$cf,y
+	org $02b2c1!F
+		adc $b260-$cf,y
+	org $02b2c7
+		lda $b262-$cf,y
+;----- paragoomba/bomb generators ($cc-$ce, originally $02-$04)
+	org $02b348
+		lda $b31f-$cc,y
 
 ;=============================================================================;
 ; Other weird broken things                                                   ;
