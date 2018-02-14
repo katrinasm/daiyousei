@@ -4,6 +4,7 @@ contributed majorly to its design.
 + [Katrina](https://github.com/katrinasm/)
 + imamelia
 + Akaginite ([Amaterasite](https://github.com/Amaterasite))
++ Romi
 + mikeyk
 + [p4plus2](https://github.com/p4plus2)
 
