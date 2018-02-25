@@ -79,7 +79,7 @@
 	!spr_type            = $7ee00c
 	!spr_xProps1         = $7ee018
 	!spr_xProps2         = $7ee024
-	!spr_custNum         = $7ee030 ; Is the 9e bit on purpose? I bet.
+	!spr_custNum         = $7ee030
 
 	; These ones are inherited from Tessera.
 	; More Tessera code may be supported in the future,
@@ -96,21 +96,19 @@
 	!spr_xClipH          = $7ee090
 
 	!spr_xOpts1          = $7ee09c
-	!spr_xOpts2          = $7ee0a4
+	!spr_xOpts2          = $7ee0a8
 
 ;=============================================================================;
 ; Generator data locations.                                                   ;
 ;=============================================================================;
 
 	!gen_id              = $18b9
-	!gen_posXY           = $7ee0b0
-	!gen_xProps1         = $7ee0b1
-	!gen_xProps2         = $7ee0b2
-	!gen_extraBits       = $7ee0b3
-	!gen_xByte1          = $7ee0b4
-	!gen_xByte2          = $7ee0b5
-	!gen_xByte3          = $7ee0b6
-	!gen_xByte4          = $7ee0b7
+	!gen_extraBits       = $7ee0b4
+	!gen_posXY           = $7ee0b5
+	!gen_xByte1          = $7ee0b6
+	!gen_xByte2          = $7ee0b7
+	!gen_xByte3          = $7ee0b8
+	!gen_xByte4          = $7ee0b9
 
 ;=============================================================================;
 ; Shooter table locations.                                                    ;
@@ -187,6 +185,8 @@
 	!oam0_sizes          = $0420
 
 	!dys_slot            = $15e9
+
+
 	; These ones are mostly used internally.
 	!dys_sprLoadStatuses = $1938
 	!dys_lastOam         = $7ee0f8

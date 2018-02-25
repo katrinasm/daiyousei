@@ -104,8 +104,6 @@
 
 	!gen_id              = $78b9
 	!gen_posXY           = $418cc0
-	!gen_xProps1         = $418cc1
-	!gen_xProps2         = $418cc2
 	!gen_extraBits       = $418cc3
 	!gen_xByte1          = $418cc4
 	!gen_xByte2          = $418cc5
