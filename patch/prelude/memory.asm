@@ -185,6 +185,9 @@
 	!oam0_sizes          = $0420
 
 	!dys_slot            = $15e9
+
+	!dys_wiggleTables    = $7f9a7b
+
 	; These ones are mostly used internally.
 	!dys_sprLoadStatuses = $1938
 	!dys_lastOam         = $7fac38
@@ -195,3 +198,6 @@
 	!dys_loadLineMemo    = $7fac3b
 	!dys_loadOfsMemo     = $7fac3d
 	!dys_loadStatMemo    = $7fac3f
+
+	!dys_wiggleTblOwners = $7fac58
+	!dys_wiggleTblIds    = $7fac5c

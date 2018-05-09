@@ -175,12 +175,12 @@ Offscreen:
 	sta $03
 	jsl IsOffscreen : beq .ret
 	phb : phk : plb
-	
+
 	; large levels don't differ in vertical/horizontal
 	if !opt_largeLevels == 0
 		lda $5b : lsr : bcs .vertical
 	endif
-	
+
 .horizontal:
 	; If y pos not in range (-$50 ... $1b0),
 	; we're off screen
@@ -257,23 +257,23 @@ if !opt_largeLevels == 0
 		; in a vertical level, there is no similar rule for horizontal stuff,
 		; so just let it live right away
 		lda !spr_props4,x : and #$04 : beq .end
-		
+
 		; only process on even frames
 		lda $13 : lsr : bcs .end
-		
+
 		; check if we are onscreen horizontally
 		lda !spr_posXL,x : cmp #$00
 		lda !spr_posXH,x : sbc #$00
 		cmp #$02
 		bcs .erase
-		
+
 		; check if we are onscreen vertically
-		
+
 		; get y-pos relative to screen
 		lda !spr_posYH,x : xba : lda !spr_posYL,x
 		rep #$20
 		sec : sbc $1c
-		
+
 		bmi .aboveScreen
 	.belowOrOnScreen:
 		; if we have a positive screen pos, make sure we are not too far below
@@ -369,7 +369,7 @@ pointSounds:
 	else
 		lda $02 : clc : adc !spr_miscZ,x : sta !oam1_tile,y
 	endif
-	
+
 	lda !spr_facing,x : lsr : ror : lsr : eor #$40
 	ora !spr_tileProps,x
 	ora $64
@@ -505,7 +505,7 @@ pointSounds:
 +	jsl GetDrawInfo
 
 	phx
-	
+
 	if !opt_katysHack
 		lda !spr_miscZ,x : pha
 	endif
@@ -616,7 +616,7 @@ pointSounds:
 		lda #$00 : pha
 		lda !spr_miscZ,x : pha
 	endif
-	
+
 	lda $00 : sta $02
 	lda !spr_facing,x : lsr : ror : lsr : eor #$40 : ora $64 : sta $05
 	stz $0c
@@ -695,6 +695,55 @@ pointSounds:
 %dys_ssr(TranslateXY)
 	jsl TranslateX
 	jml TranslateY
+
+%dys_ssr(GetWiggleTable)
+	lda.b #$03 : sta $0f
+.loop:
+	ldx $0f
+	; if the owner is 0, the table is free
+	lda !dys_wiggleTblOwners,x : beq .found
+	dec
+	; if the owner's slot is our slot, the table is available to us
+	cmp !dys_slot : beq .sameSlot
+	; save the table owner's ID
+	lda !dys_wiggleTblIds,x : sta $0e
+	; start loading from the sprite in the table
+	lda !dys_wiggleTblOwners,x : dec : tax
+	; if the owner is dead, the table is free
+	lda !spr_status,x : beq .found
+	; if the owner's ID doesn't match the ID currently in the table slot,
+	; the table is free
+	lda !spr_custNum,x : cmp $0e : bne .found
+	dec $0f : bpl .loop
+.notFound:
+	ldx !dys_slot
+	lda #$ff
+	rtl
+
+.found:
+	wdm #$03
+	ldx $0f
+	lda !dys_slot : inc : sta !dys_wiggleTblOwners,x
+.sameSlot:
+	wdm #$04
+	ldx !dys_slot
+	lda !spr_custNum,x
+	ldx $0f
+	sta !dys_wiggleTblIds,x
+
+	txa
+	ldx !dys_slot
+	rtl
+
+%dys_ssr(GetWigglePtr)
+	ldy.b #!dys_wiggleTables>>16 : sty $0a
+	rep #$20
+	and #$0003
+	xba : lsr
+	adc.w #!dys_wiggleTables
+	sta $08
+	sep #$20
+	rtl
 
 END:
 print "; Space used by dys SSRs: ", hex(END-START)

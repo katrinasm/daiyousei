@@ -186,6 +186,7 @@
 
 	!dys_slot            = $15e9
 
+	!dys_wiggleTables    = $7ee200
 
 	; These ones are mostly used internally.
 	!dys_sprLoadStatuses = $1938
@@ -197,3 +198,7 @@
 	!dys_loadLineMemo    = $7ee0fb
 	!dys_loadOfsMemo     = $7ee0fd
 	!dys_loadStatMemo    = $7ee0ff
+
+	!dys_wiggleTblOwners = $7ee100
+	!dys_wiggleTblIds    = $7ee104
+
