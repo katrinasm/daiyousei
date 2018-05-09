@@ -357,13 +357,6 @@ endif
 
 	lsr #3 : xba
 	lda $04 : %OB(sta, !gen_id)
-	rep #$20
-	phx
-	asl #4 : tax
-	lda DYS_DATA_OPTION_BYTES+14,x
-	%OB(sta, !gen_xProps1)
-	plx
-	sep #$20
 	lda $5b : lsr
 	lda $0000,y : and #$f0 : xba
 	lda $0001,y : and #$f0
