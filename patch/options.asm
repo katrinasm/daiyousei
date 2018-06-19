@@ -2,8 +2,6 @@
 
 !opt_fastrom                 = 1
 
-!opt_dropRoutines            = 1
-
 ; Currently unimplemented.
 !opt_noOriginals             = 0
 !opt_supportSpecialWorld     = 1
