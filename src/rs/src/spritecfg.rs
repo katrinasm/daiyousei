@@ -140,14 +140,14 @@ impl SpriteCfg {
 				},
 				Some("INIT") => match snd {
 					Some(ofs) => init = usize::from_str_radix(ofs, 16).unwrap(),
-					_         => return Err((vec![],vec![])),
+					_         => return single_error("No offset after \"INIT\" declaration"),
 				},
                 Some("DROP") => match snd {
 					Some(ofs) => drop = usize::from_str_radix(ofs, 16).unwrap(),
-					_         => return Err((vec![],vec![])),
+					_         => return single_error("No offset after \"DROP\" declaration"),
                 },
 				None         => (),
-				_            => return Err((vec![],vec![])),
+				_            => return single_error("The sprite printed something other than MAIN, INIT, or DROP"),
 			}
 		};
 
