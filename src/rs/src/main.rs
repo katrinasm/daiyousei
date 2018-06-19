@@ -13,12 +13,16 @@ mod genus;
 mod parse_aux;
 mod spritecfg;
 mod insertlist;
+mod insert_opts;
+mod insert_err;
 mod dys_tables;
 mod desclist;
 
 use asar::rom::RomBuf;
 use spritecfg::{SpriteCfg, InsertPoint};
 use dys_tables::DysTables;
+use insert_opts::InsertOpts;
+use insert_err::InsertResult;
 
 macro_rules! error_exit {
 	($x: expr) => {{ println!("{}",$x); return; }}
@@ -42,7 +46,9 @@ struct CmdArgs {
 fn main() {
 	let args = require_ok!(parse_args(env::args()));
 
-	let verbose = args.flags.contains(&'v');
+    let mut iopts = InsertOpts::default();
+	iopts.verbose = args.flags.contains(&'v');
+
 	let gen_ssc = args.flags.contains(&'d');
 	let gen_collection = args.flags.contains(&'c');
 
@@ -127,13 +133,25 @@ fn main() {
 	};
 
 	let dys_data = get_tables().unwrap();
-	copy_sprite_settings(&mut rom, dys_data.option_bytes);
+
+    let custom_drop_table = rom.get_long(0x01e2b0).unwrap();
+    let use_custom_drops = custom_drop_table != 0xff_ffff;
+
+	copy_sprite_settings(&mut rom, dys_data.option_bytes, use_custom_drops);
+    if use_custom_drops {
+        custom_og_drops(&mut rom, dys_data.drop_ptrs, custom_drop_table);
+    }
+    println!("tables: MAIN ${:06x}, INIT ${:06x}, DROP ${:06x}",
+        dys_data.main_ptrs,
+        dys_data.init_ptrs,
+        dys_data.drop_ptrs,
+    );
 
 	let groups = require_ok!(insertlist::parse_list(&list_buf));
 
 	let cfgs = require_ok!(get_cfgs(groups, &base_dir));
 
-	if let Err((errs, warns)) = insert_sprites(&mut rom, &cfgs, &patch_dir, &dys_data, verbose) {
+	if let Err((errs, warns)) = insert_sprites(&mut rom, &cfgs, &patch_dir, &dys_data, iopts) {
 		println!("==== Insertion was stopped by an error ====");
 		for err in errs { println!("Error: {}", err); };
 		for warn in warns { println!("Warning: {}", warn); };
@@ -292,8 +310,8 @@ fn patch_subroutines(rom: &mut RomBuf, patch_dir: &Path, base_dir: &Path) -> asa
 }
 
 fn insert_sprites(rom: &mut RomBuf, cfgs: &[SpriteCfg], patch_dir: &Path, dys_data: &DysTables,
-verbose: bool)
--> asar::AResult<()> {
+iopts: InsertOpts)
+-> InsertResult<()> {
 	let mut routines = HashMap::<PathBuf, InsertPoint>::new();
 	let prelude = "incsrc \"sprite_prelude.asm\"\r\n";
 	let temploc = patch_dir.join("temp_sprite.asm");
@@ -317,8 +335,11 @@ verbose: bool)
 			(ip, warns)
 		};
 
-		if verbose {
+		if iopts.verbose {
 			print!("\tMAIN: ${:06x}\n\tINIT: ${:06x}\n", ip.main, ip.init);
+            if ip.drop != 0 {
+                println!("\tDROP: ${:06x}", ip.drop);
+            }
 			for warn in warns {
 				println!("\tWarning: {}", warn);
 			};
@@ -335,6 +356,7 @@ fn get_tables() -> Result<DysTables, String> {
 		option_bytes: try!(possible_label("DYS_DATA_OPTION_BYTES")),
 		init_ptrs:    try!(possible_label("DYS_DATA_INIT_PTRS")),
 		main_ptrs:    try!(possible_label("DYS_DATA_MAIN_PTRS")),
+		drop_ptrs:    try!(possible_label("DYS_DATA_DROP_PTRS")),
 		cls_ptrs:     try!(possible_label("DYS_DATA_CLS_PTRS")),
 		xsp_ptrs:     try!(possible_label("DYS_DATA_XSP_PTRS")),
 		mxs_ptrs:     try!(possible_label("DYS_DATA_MXS_PTRS")),
@@ -415,7 +437,7 @@ fn eq_str_bytes(s: &str, bytes: &[u8]) -> bool {
 	s.bytes().zip(bytes).all(|(c, b)| c == *b)
 }
 
-fn copy_sprite_settings(rom: &mut RomBuf, table: usize) {
+fn copy_sprite_settings(rom: &mut RomBuf, table: usize, use_custom_drops: bool) {
 	let orig_table: usize = 0x07f26c;
 
 	rom.clear_bytes(table, 0xc8 * 16).unwrap();
@@ -427,6 +449,9 @@ fn copy_sprite_settings(rom: &mut RomBuf, table: usize) {
 			let b = rom.get_byte(orig_table + i + 0xc9 * j).unwrap();
 			rom.set_byte(table + i * 16 + 2 + j, b).unwrap();
 		}
+        if use_custom_drops {
+            rom.set_byte(table + i * 16 + 9, 0x80).unwrap();
+        }
 	}
 	// + 1 is to make it inclusive.
 	for i in 0x0c9 .. 0x0ca + 1 { rom.set_byte(table + i * 16, 3).unwrap(); } // shooters
@@ -436,3 +461,11 @@ fn copy_sprite_settings(rom: &mut RomBuf, table: usize) {
 	for i in 0x0e7 .. 0x0f5 + 1 { rom.set_byte(table + i * 16, 5).unwrap(); } // scroll clear
 	for i in 0x1e7 .. 0x1f5 + 1 { rom.set_byte(table + i * 16, 5).unwrap(); } // scroll set
 }
+
+fn custom_og_drops(rom: &mut RomBuf, drop_table: usize, src_table: usize) {
+    for i in 0 .. 0xc8 * 3 {
+        let b = rom.get_byte(src_table + i).unwrap();
+        rom.set_byte(drop_table + i, b).unwrap();
+    }
+}
+
