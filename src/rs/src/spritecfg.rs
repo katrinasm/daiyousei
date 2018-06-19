@@ -100,15 +100,6 @@ impl SpriteCfg {
             File::open(source),
             |e| format!("error opening \"{}\": {}", source.to_string_lossy(), e)
         )?;
-		// let mut srcf = match File::open(source) {
-			// Ok(f) => f,
-			// Err(e) => return Err((
-				// vec![asar::AsmError::Interface(format!("error opening \"{}\": {}",
-					// source.to_string_lossy(), e)
-				// )],
-				// vec![]
-			// )),
-		// };
 
 		srcf.read_to_end(&mut source_buf).unwrap();
 		tempasm.write_all(&source_buf).unwrap();
