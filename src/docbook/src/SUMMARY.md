@@ -16,4 +16,5 @@
 	- [Subroutines](how-to-code/subroutines.md)
 		- [GenericGfx](how-to-code/subroutines-gfx.md)
 		- [Spawning](how-to-code/subroutines-spawn.md)
+	- [Defining Your Own Routines](how-to-code/user-subroutines.md)
 [Contributors](contributors.md)
