@@ -17,6 +17,12 @@ pushpc
 		plb
 		rts
 
+	if !opt_dropRoutines
+		org $018151
+			jsl DropHandler
+			rts
+	endif
+
 	org $02affe
 		phb
 		jsl GeneratorHandler
@@ -127,3 +133,41 @@ ShooterHandler:
 	bne CallMain
 	sep #$30
 	rtl
+
+
+if !opt_dropRoutines
+	DropHandler:
+		lda !spr_xOpts2,x : bpl .noDrop
+
+		lda !spr_custNum,x : sta $00
+		lda !spr_extraBit,x : lsr #3 : and #$03 : sta $01
+
+		rep #$30
+		lda $00 : asl : adc $00 : tax
+		lda DYS_DATA_DROP_PTRS,x
+		beq .endEarly
+		sta $00
+		sep #$20
+		lda DYS_DATA_DROP_PTRS+2,x
+		sep #$10
+		sta $02
+
+		phb
+		ldx !dys_slot
+		pha : plb
+		phk : pea.w .retp-1
+		jml.w [!DP|$00]
+	.retp:
+		lda #$00 : sta !spr_xOpts2,x
+		plb
+		lda #$ff : sta !spr_loadStatIndex,x
+		rtl
+
+	.endEarly:
+		sep #$30
+		ldx !dys_slot
+		lda #$00 : sta !spr_xOpts2,x
+	.noDrop:
+		lda #$ff : sta !spr_loadStatIndex,x
+		rtl
+endif

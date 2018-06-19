@@ -10,6 +10,7 @@ use asar::rom::RomBuf;
 use parse_aux::dys_prefix;
 use genus::Genus;
 use dys_tables::DysTables;
+use insert_err::{InsertResult, format_result, warnless_result, single_error};
 
 #[derive(Debug)]
 pub struct CfgErr {
@@ -38,6 +39,7 @@ pub clipping: [u8; 4],
 pub struct InsertPoint {
 	pub main: usize,
 	pub init: usize,
+    pub drop: usize,
 }
 
 impl SpriteCfg {
@@ -81,9 +83,8 @@ impl SpriteCfg {
 	pub fn placeable(&self) -> bool { self.genus.placeable() }
 
 	pub fn assemble(&self, rom: &mut RomBuf, prelude: &str, source: &Path, temp: &Path)
-	-> asar::AResult<InsertPoint> {
-		let (mut main, mut init) = (0usize, 0usize);
-		let warns;
+	-> InsertResult<InsertPoint> {
+		let (mut main, mut init, mut drop) = (0usize, 0usize, 0usize);
 
 		let mut tempasm = OpenOptions::new()
 			.write(true)
@@ -95,24 +96,28 @@ impl SpriteCfg {
 		tempasm.write_all(prelude.as_bytes()).unwrap();
 		let mut source_buf = Vec::<u8>::with_capacity(8 * 1024); // A wild guess.
 
-		let mut srcf = match File::open(source) {
-			Ok(f) => f,
-			Err(e) => return Err((
-				vec![asar::AsmError::Interface(format!("error opening \"{}\": {}",
-					source.to_string_lossy(), e)
-				)],
-				vec![]
-			)),
-		};
+        let mut srcf = warnless_result(
+            File::open(source),
+            |e| format!("error opening \"{}\": {}", source.to_string_lossy(), e)
+        )?;
+		// let mut srcf = match File::open(source) {
+			// Ok(f) => f,
+			// Err(e) => return Err((
+				// vec![asar::AsmError::Interface(format!("error opening \"{}\": {}",
+					// source.to_string_lossy(), e)
+				// )],
+				// vec![]
+			// )),
+		// };
 
 		srcf.read_to_end(&mut source_buf).unwrap();
 		tempasm.write_all(&source_buf).unwrap();
 
-		drop(tempasm);
+		::std::mem::drop(tempasm);
 
-		warns = match asar::patch(temp, rom) {
-			Ok((_, ws))     => ws,
-			Err(ews)        => return Err(ews),
+		let warns = match asar::patch(temp, rom) {
+			Ok((_, mut ws))     => ws.drain(..).map(|w| w.into()).collect(),
+			Err((mut es, mut ws))   => return Err((es.drain(..).map(|e| e.into()).collect(), ws.drain(..).map(|w| w.into()).collect())),
 		};
 
 		for print in asar::prints() {
@@ -122,22 +127,29 @@ impl SpriteCfg {
 			match fst {
 				Some("MAIN") => match snd {
 					Some(ofs) => main = usize::from_str_radix(ofs, 16).unwrap(),
-					_         => return Err((vec![],vec![])),
+					_         => return single_error("No offset after \"MAIN\" declaration"),
 				},
 				Some("INIT") => match snd {
 					Some(ofs) => init = usize::from_str_radix(ofs, 16).unwrap(),
 					_         => return Err((vec![],vec![])),
 				},
+                Some("DROP") => match snd {
+					Some(ofs) => drop = usize::from_str_radix(ofs, 16).unwrap(),
+					_         => return Err((vec![],vec![])),
+                },
 				None         => (),
 				_            => return Err((vec![],vec![])),
 			}
 		};
 
-		if main == 0 || (init == 0 && self.needs_init()) {
-			return Err((vec![],vec![]));
+		if main == 0 {
+            return single_error("No main routine");
+        }
+        if init == 0 && self.needs_init() {
+			return single_error("No init routine");
 		}
 
-		Ok((InsertPoint { main: main, init: init }, warns))
+		Ok((InsertPoint { main, init, drop }, warns))
 	}
 
 	pub fn apply_cfg(&self, rom: &mut RomBuf, tables: &DysTables) {
@@ -176,6 +188,9 @@ impl SpriteCfg {
 			g if g.placeable() => {
 				rom.set_long(tables.main_ptrs + ofs, ip.main as u32).unwrap();
 				rom.set_long(tables.init_ptrs + ofs, ip.init as u32).unwrap();
+                if tables.drop_ptrs != 0 {
+                    rom.set_long(tables.drop_ptrs + ofs, ip.drop as u32).unwrap();
+                }
 			},
 			Genus::Cls => rom.set_long(tables.cls_ptrs + ofs, ip.main as u32).unwrap(),
 			_ => unimplemented!(),

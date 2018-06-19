@@ -537,6 +537,14 @@ pushpc
 
 	%fillIfMany($200*3)
 
+	if !opt_dropRoutines
+		DYS_DATA_DROP_PTRS:
+			fill $200*3
+			%fillIfMany($200*3)
+	else
+		DYS_DATA_DROP_PTRS = 0
+	endif
+
 	DYS_DATA_CLS_PTRS:
 	if !opt_noOriginals
 		fill $100*3
