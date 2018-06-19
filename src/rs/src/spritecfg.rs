@@ -86,25 +86,25 @@ impl SpriteCfg {
 	-> InsertResult<InsertPoint> {
 		let (mut main, mut init, mut drop) = (0usize, 0usize, 0usize);
 
-		let mut tempasm = OpenOptions::new()
-			.write(true)
-			.truncate(true)
-			.create(true)
-			.open(temp)
-			.unwrap();
+		{
+            let mut tempasm = OpenOptions::new()
+                .write(true)
+                .truncate(true)
+                .create(true)
+                .open(temp)
+                .unwrap();
 
-		tempasm.write_all(prelude.as_bytes()).unwrap();
-		let mut source_buf = Vec::<u8>::with_capacity(8 * 1024); // A wild guess.
+            tempasm.write_all(prelude.as_bytes()).unwrap();
+            let mut source_buf = Vec::<u8>::with_capacity(8 * 1024); // A wild guess.
 
-        let mut srcf = warnless_result(
-            File::open(source),
-            |e| format!("error opening \"{}\": {}", source.to_string_lossy(), e)
-        )?;
+            let mut srcf = warnless_result(
+                File::open(source),
+                |e| format!("error opening \"{}\": {}", source.to_string_lossy(), e)
+            )?;
 
-		srcf.read_to_end(&mut source_buf).unwrap();
-		tempasm.write_all(&source_buf).unwrap();
-
-		::std::mem::drop(tempasm);
+            srcf.read_to_end(&mut source_buf).unwrap();
+            tempasm.write_all(&source_buf).unwrap();
+        }
 
 		let warns = match asar::patch(temp, rom) {
 			Ok((_, mut ws))     => ws.drain(..).map(|w| w.into()).collect(),
