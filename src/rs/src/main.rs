@@ -134,6 +134,8 @@ fn main() {
 
 	let dys_data = get_tables().unwrap();
 
+    iopts.use_drops = dys_data.drop_ptrs != 0;
+
     let custom_drop_table = rom.get_long(0x01e2b0).unwrap();
     let use_custom_drops = custom_drop_table != 0xff_ffff;
 
@@ -141,11 +143,6 @@ fn main() {
     if use_custom_drops {
         custom_og_drops(&mut rom, dys_data.drop_ptrs, custom_drop_table);
     }
-    println!("tables: MAIN ${:06x}, INIT ${:06x}, DROP ${:06x}",
-        dys_data.main_ptrs,
-        dys_data.init_ptrs,
-        dys_data.drop_ptrs,
-    );
 
 	let groups = require_ok!(insertlist::parse_list(&list_buf));
 
@@ -328,7 +325,7 @@ iopts: InsertOpts)
 		} else {
 			println!("Inserting {} #{:03x} [{}]",
 				cfg.genus.shortname(), cfg.id, src.to_string_lossy());
-			let (ip, warns) = try!(cfg.assemble(rom, prelude, src, &temploc));
+			let (ip, warns) = try!(cfg.assemble(rom, prelude, src, &temploc, iopts));
 			cfg.apply_cfg(rom, dys_data);
 			cfg.apply_offsets(rom, dys_data, ip);
 			routines.insert(src.clone(), ip);

@@ -1,4 +1,4 @@
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct InsertOpts {
     pub use_drops: bool,
     pub verbose: bool,

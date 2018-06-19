@@ -80,10 +80,23 @@ impl SpriteCfg {
 		}
 	}
 
+    pub fn needs_drop(&self) -> bool {
+        match self.genus {
+            Genus::Std => self.dys_option_bytes[1] & 0x80 != 0,
+            _          => false,
+        }
+    }
+
 	pub fn placeable(&self) -> bool { self.genus.placeable() }
 
-	pub fn assemble(&self, rom: &mut RomBuf, prelude: &str, source: &Path, temp: &Path)
-	-> InsertResult<InsertPoint> {
+	pub fn assemble(
+        &self,
+        rom: &mut RomBuf,
+        prelude: &str,
+        source: &Path,
+        temp: &Path,
+        iopts: ::insert_opts::InsertOpts
+    ) -> InsertResult<InsertPoint> {
 		let (mut main, mut init, mut drop) = (0usize, 0usize, 0usize);
 
 		{
@@ -107,8 +120,13 @@ impl SpriteCfg {
         }
 
 		let warns = match asar::patch(temp, rom) {
-			Ok((_, mut ws))     => ws.drain(..).map(|w| w.into()).collect(),
-			Err((mut es, mut ws))   => return Err((es.drain(..).map(|e| e.into()).collect(), ws.drain(..).map(|w| w.into()).collect())),
+			Ok((_, mut ws)) => ws.drain(..).map(|w| w.into()).collect(),
+			Err((mut es, mut ws)) => {
+                return Err(
+                    (es.drain(..).map(|e| e.into()).collect(),
+                     ws.drain(..).map(|w| w.into()).collect())
+                )
+            },
 		};
 
 		for print in asar::prints() {
@@ -139,6 +157,18 @@ impl SpriteCfg {
         if init == 0 && self.needs_init() {
 			return single_error("No init routine");
 		}
+
+        if drop == 0 && self.needs_drop() {
+            return single_error("Drop routine required by dys_opts, but not provided");
+        }
+
+        if drop != 0 && !self.needs_drop() {
+            return single_error("Sprite has a drop routine, but dys_opts doesn't require one");
+        }
+
+        if self.needs_drop() && !iopts.use_drops {
+            return single_error("Sprite needs a drop routine, but drop routines aren't enabled");
+        }
 
 		Ok((InsertPoint { main, init, drop }, warns))
 	}
