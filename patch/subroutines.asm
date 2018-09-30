@@ -678,7 +678,7 @@ pointSounds:
 	rts
 
 %dys_ssr(SpawnSprite)
-	jsl FindFreeSlot
+	jsl $02a9e4!F
 	bmi .ret
 	phx
 	tyx

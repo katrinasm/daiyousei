@@ -294,14 +294,6 @@ LoadSprites:
 	bra .nextSprite
 
 .foundSlot
-print "drop check @ ", pc
-	if !opt_dropRoutines
-	; If we have drop routines, we have to drop the sprite before spawning anything
-	; since the drop requires pushing a bunch of stuff, skip it if we can
-		%OBX(lda, !spr_xOpts2) : bpl .noDrop
-		jsr DropBeforeLoad
-	.noDrop
-	endif
 ; First off, drop everything and initialize the easy tables.
 ; But before we do that we have to set the extra bit and sprite number.
 	lda $04 : %OBX(sta, !spr_custNum)
@@ -482,26 +474,6 @@ RunOnce:
 	plx : stx $0e
 	plb : plx : ply
 	rts
-
-if !opt_dropRoutines
-DropBeforeLoad:
-	phx : phy : phb
-	pei ($00) : pei ($02) : pei ($04) : pei ($0c) : pei ($0e)
-	php
-
-	sep #$30
-	lda.b #DropHandler>>16 : pha : plb
-	jsl DropHandler
-
-	plp
-	plx : stx $0e
-	plx : stx $0c
-	plx : stx $04
-	plx : stx $02
-	plx : stx $00
-	plb : ply : plx
-	rts
-endif
 
 LoadExtraBytes:
 	rep #$20
