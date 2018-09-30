@@ -82,9 +82,24 @@ if !opt_vitorSA1 == 0
 		beq .found
 		dey
 		bpl .loop
-	.found
-		tya
-		rtl
+	if !opt_dropRoutines == 0
+		.found
+			tya
+			rtl
+	else
+			tya
+			rtl
+		.found
+			phx
+			phy
+			tyx
+			jsl DropHandler
+			ply
+			plx
+			tya
+			rtl
+	endif
+	warnpc $02aa0b
 
 	pullpc
 endif

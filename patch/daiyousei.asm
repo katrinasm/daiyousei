@@ -10,3 +10,6 @@ incsrc "status.asm"
 incsrc "cls_status.asm"
 incsrc "nstl.asm"
 incsrc "clipping.asm"
+if !opt_dropRoutines
+	incsrc "drop.asm"
+endif
